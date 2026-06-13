@@ -12,7 +12,7 @@ It implements professional security and organizational standards, preventing acc
 - **Safe Deployment:** The script protects existing `.gitignore` files from being overwritten (this can be bypassed using the `-Force` parameter).
 - **Critical Path Protection:** Includes safeguard mechanisms preventing execution in key system paths (e.g., `C:\Windows`).
 - **Simulation Mode (WhatIf):** Built-in support for the `-WhatIf` parameter, allowing for safe testing of operations without modifying the disk.
-- **Environment Structure Generation:** A default-enabled parameter initializes an empty `.env` file and a `.local` directory in the repository, accelerating project configuration.
+- **Environment Structure Generation:** A default-enabled parameter initializes a `.env` directory and a `.local` directory in the repository, accelerating project configuration.
 
 ## Parameters
 
@@ -20,7 +20,7 @@ It implements professional security and organizational standards, preventing acc
 | :--- | :--- | :--- | :--- | :--- |
 | `RepoPath` | `string` | No (Positional) | None | The path to the Git repository root directory. |
 | `Force` | `switch` | No | `$false` | Forces overwriting the `.gitignore` file if it already exists. |
-| `CreateLocalEnv` | `bool` | No | `$true` | Enabled by default; automatically creates an `.env` file and a `.local` directory if they do not already exist. |
+| `CreateLocalEnv` | `bool` | No | `$true` | Enabled by default; automatically creates a `.env` directory and a `.local` directory if they do not already exist. |
 | `Help` | `switch` | No | `$false` | Displays detailed documentation (Help) for the script. |
 
 ## Usage Examples
@@ -28,23 +28,18 @@ It implements professional security and organizational standards, preventing acc
 ### Basic Initialization (Recommended)
 ```powershell
 .\Initialize-GitIgnore.ps1 -RepoPath "C:\Projects\SystemAudit"
-```
-*Tworzy plik `.gitignore` w zadanym katalogu oraz generuje podstawową strukturę (plik `.env` i katalog `.local`).*
+Creates a .gitignore file in the specified directory and generates the base structure (the .env file and .local directory).
 
-### Wymuszenie nadpisania konfiguracji
-```powershell
+###Force Overwrite Configuration
+```PowerShell
 .\Initialize-GitIgnore.ps1 -RepoPath "C:\Projects\SystemAudit" -Force
-```
-*Nadpisuje istniejący już plik `.gitignore`.*
+Overwrites an already existing .gitignore file.
 
-### Wyłączenie generowania plików i katalogów środowiskowych
-```powershell
+###Disable Environment File and Directory Generation
+```PowerShell
 .\Initialize-GitIgnore.ps1 -RepoPath "C:\Projects\SystemAudit" -CreateLocalEnv:$false
-```
-*Generuje wyłącznie plik `.gitignore`, całkowicie ignorując krok tworzenia `.env` oraz `.local`.*
+Generates only the .gitignore file, completely skipping the step of creating .env and .local.
 
-### Symulacja zmian
-```powershell
+###Simulate Changes
+```PowerShell
 .\Initialize-GitIgnore.ps1 -RepoPath "C:\Projects\SystemAudit" -WhatIf
-```
-*Wyświetla logi informujące o tym, co zostanie utworzone bez faktycznego wprowadzania zmian na dysku.*
