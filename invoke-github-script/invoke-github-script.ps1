@@ -29,7 +29,7 @@ param (
     [string]$ScriptUrl,
 
     [Parameter(Mandatory = $false)]
-    [string]$OutputPath = "$env:USERPROFILE\Downloads\enable-remote-management.ps1",
+    [string]$OutputPath,
 
     [Parameter(Mandatory = $false)]
     [Alias('h', 'Help')]
@@ -54,7 +54,7 @@ function Show-ExtendedHelp {
     Write-Host "Usage Examples:"
     Write-Host "  1) Run with default target (Downloads folder):" -ForegroundColor Yellow
     Write-Host "     .\invoke-github-script.ps1 -ScriptUrl 'https://raw.githubusercontent.com/...'"
-    Write-Size ""
+    Write-Host ""
     Write-Host "  2) Run and save to a custom location:" -ForegroundColor Yellow
     Write-Host "     .\invoke-github-script.ps1 -ScriptUrl 'URL' -OutputPath 'C:\Tools\script.ps1'"
     Write-Host "=====================================================================" -ForegroundColor Cyan
@@ -64,6 +64,19 @@ function Show-ExtendedHelp {
 if ($HelpMe -or [string]::IsNullOrEmpty($ScriptUrl)) {
     Show-ExtendedHelp
     Exit
+}
+
+# Auto-correct standard GitHub URLs to raw URLs to prevent downloading HTML pages
+if ($ScriptUrl -match '(?i)^https://github\.com/([^/]+/[^/]+)/blob/(.+)$') {
+    $ScriptUrl = "https://raw.githubusercontent.com/$($Matches[1])/$($Matches[2])"
+    Write-Host "Auto-corrected GitHub URL to raw format." -ForegroundColor Cyan
+}
+
+# Dynamically set default OutputPath if not provided
+if ([string]::IsNullOrWhiteSpace($OutputPath)) {
+    $fileName = $ScriptUrl.Split('/')[-1]
+    if ([string]::IsNullOrWhiteSpace($fileName)) { $fileName = "downloaded-script.ps1" }
+    $OutputPath = "$env:USERPROFILE\Downloads\$fileName"
 }
 
 # 2. Automatic UAC elevation and language-independent admin validation
