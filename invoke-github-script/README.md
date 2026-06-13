@@ -43,3 +43,18 @@ Shows detailed built-in help and usage examples directly in the console.
 ```powershell
 .\invoke-github-script.ps1 -HelpMe
 ```
+
+# Invoke-GitHubScript
+
+This script automates the process of downloading a remote PowerShell script (e.g., from GitHub), unblocking it, and running it using a temporary Execution Policy bypass.
+
+## Script Alternative
+
+Note that an alternative to using this script is to manually execute a set of commands in the PowerShell console. The same effect can be achieved with the example script by executing the following commands:
+
+```powershell
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/romanpindela/Windows-Desktop/main/enable-remote-management/enable-remote-management.ps1" -OutFile "$env:USERPROFILE\Downloads\enable-remote-management.ps1"
+Unblock-File -Path "$env:USERPROFILE\Downloads\enable-remote-management.ps1"
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force
+& "$env:USERPROFILE\Downloads\enable-remote-management.ps1"
+```
