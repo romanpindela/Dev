@@ -1,6 +1,6 @@
 # Dev 🚀
 
-A comprehensive development toolkit, local environment configuration, and automation repository designed to streamline engineering workflows, optimize local productivity, and bootstrap projects seamlessly.
+A collection of automation scripts and utilities designed to streamline developer workflows via GitHub integration and automate end-to-end application deployments.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
