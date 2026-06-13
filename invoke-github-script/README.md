@@ -23,3 +23,23 @@ A professional, secure, and production-ready PowerShell script designed to downl
 > ```powershell
 > Unblock-File -Path ".\invoke-github-script.ps1"
 >
+
+## Usage Examples
+
+**1. Basic Execution (Default Download Path):**
+Downloads the remote script to your user `Downloads` folder, unblocks it, and runs it immediately.
+```powershell
+.\invoke-github-script.ps1 -ScriptUrl "https://raw.githubusercontent.com/romanpindela/Windows-Desktop/main/enable-remote-management/enable-remote-management.ps1"
+```
+
+**2. Custom Output Path:**
+Downloads the script to a specific directory of your choice, creating the folder if it does not exist, and executes it.
+```powershell
+.\invoke-github-script.ps1 -ScriptUrl "https://raw.githubusercontent.com/romanpindela/Windows-Desktop/main/enable-remote-management/enable-remote-management.ps1" -OutputPath "C:\Scripts\MyScript.ps1"
+```
+
+**3. Display Help Menu:**
+Shows detailed built-in help and usage examples directly in the console.
+```powershell
+.\invoke-github-script.ps1 -HelpMe
+```
