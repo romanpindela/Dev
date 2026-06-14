@@ -22,25 +22,30 @@ from PIL import ImageGrab
 
 def run_process_and_capture(script_path, arguments, output_filename):
     """
-    Uruchamia skrypt. Czeka, aż PowerShell zmieni tytuł okna na znak, 
-    że skończył działanie, robi screenshot i zamyka okno.
+    Executes the script. Waits for PowerShell to change the window title indicating
+    it has finished, takes a screenshot, and closes the window.
     """
     initial_title = "AutomationCaptureWindow"
-    ready_title = "AutomationCaptureWindow-GOTOWE"
+    ready_title = "AutomationCaptureWindow-DONE"
     
-    print(f"[*] Uruchamianie: {os.path.basename(script_path)} {arguments if arguments else ''}")
+    print(f"[*] Executing: {os.path.basename(script_path)} {arguments if arguments else ''}")
     
-    # KORONA LOGIKI: 
-    # Po wykonaniu skryptu zmieniamy tytuł okna na 'ready_title', a potem wywołujemy Read-Host (pause)
-    ps_command = f"& '{script_path}' {arguments}; [System.Console]::Title = '{ready_title}'; Read-Host 'Skrypt zakończył działanie. Naciśnij Enter...'"
+    # CORE LOGIC: 
+    # After script execution, change the window title to 'ready_title', then call Read-Host (pause)
+    
+    if script_path.lower().endswith('.py'):
+        ps_command = f"& '{sys.executable}' '{script_path}' {arguments}; [System.Console]::Title = '{ready_title}'; Read-Host 'Script finished execution. Press Enter...'"
+    else:
+        ps_command = f"& '{script_path}' {arguments}; [System.Console]::Title = '{ready_title}'; Read-Host 'Script finished execution. Press Enter...'"
+        
     cmd_command = f'cmd.exe /c start /MAX "{initial_title}" powershell.exe -NoExit -Command "{ps_command}"'
     
     process = subprocess.Popen(cmd_command, shell=True)
     
-    # Pętla monitorująca: Czekamy aż okno zmieni tytuł na wersję z "-GOTOWE"
-    # Dajemy maksymalnie 60 sekund (600 prób co 0.1s) na wykonanie się Twojego skryptu
+    # Monitoring loop: Wait until the window title changes to "-DONE"
+    # Give a maximum of 60 seconds (600 tries every 0.1s) for your script to finish
     win = None
-    print("[*] Oczekiwanie na zakończenie działania skryptu przez PowerShell...")
+    print("[*] Waiting for the script to finish execution in PowerShell...")
     for _ in range(600):
         time.sleep(0.1)
         windows = gw.getWindowsWithTitle(ready_title)
@@ -49,29 +54,29 @@ def run_process_and_capture(script_path, arguments, output_filename):
             break
             
     if not win:
-        print(f"[!] Błąd: Skrypt nie zakończył działania w wyznaczonym czasie (timeout 60s).")
+        print(f"[!] Error: The script did not finish within the designated time (60s timeout).")
         return
 
     try:
-        # Skrypt zgłosił gotowość! Aktywujemy okno
+        # Script reported readiness! Activating window
         if win.isMinimized:
             win.restore()
         win.maximize()
         win.activate()
         
-        # Mała pauza 0.4s na upewnienie się, że Windows wyrenderował ostatnie linie tekstu
+        # Short 0.4s pause to ensure Windows rendered the last lines of text
         time.sleep(0.4)
         
-        # Przechwycenie obrazu okna
+        # Capture window image
         bbox = (win.left, win.top, win.right, win.bottom)
         screenshot = ImageGrab.grab(bbox)
         screenshot.save(output_filename, "JPEG")
-        print(f"[+] Wykryto status 'Pause'. Zapisano zrzut ekranu: {os.path.basename(output_filename)}")
+        print(f"[+] 'Pause' status detected. Screenshot saved: {os.path.basename(output_filename)}")
         
-        # Bezpieczne zamknięcie okna konsoli
+        # Safely close the console window
         win.close()
     except Exception as e:
-        print(f"[!] Błąd podczas obsługi okna: {e}")
+        print(f"[!] Error during window handling: {e}")
         try:
             process.terminate()
         except:
@@ -79,7 +84,7 @@ def run_process_and_capture(script_path, arguments, output_filename):
 
 def main():
     parser = argparse.ArgumentParser(description="Professional README screenshot generator.")
-    parser.add_argument("-s", "--script", type=str, required=True, help="Path to the .ps1 or .exe file")
+    parser.add_argument("-s", "--script", type=str, required=True, help="Path to the .ps1, .exe or .py file")
     parser.add_argument("-args", "--arguments", type=str, default="", help="Standard execution arguments")
     parsed_args = parser.parse_args()
 
