@@ -1,13 +1,13 @@
 # Add Run Screenshots to README
 
-A professional utility script written in Python to automatically execute a given PowerShell or `.exe` script, capture its output window as screenshots, and embed those screenshots directly into a `readme.md` file. 
+A professional utility script written in Python to automatically execute a given PowerShell, `.exe`, or `.py` script, capture its output window as screenshots, and embed those screenshots directly into a `readme.md` file. 
 
 This is particularly useful for quickly generating execution showcases for your CLI applications, scripts, and utilities on GitHub or in documentation.
 
 ## Features
 
 - **Auto-Environment Setup:** Automatically installs missing dependencies (`pygetwindow`, `pillow`) without breaking the run flow.
-- **Smart Window Tracking:** Safely launches a target `.ps1` or `.exe` process, anchors the window from closing too early, and intelligently waits until the window actually appears on the screen.
+- **Smart Window Tracking:** Safely launches a target `.ps1`, `.exe`, or `.py` process, anchors the window from closing too early, and intelligently waits until the window actually appears on the screen.
 - **Dual Run Snapshots:** Captures both:
   1. The "Standard Run" output (using standard supplied arguments).
   2. The "-Help" flag output.
@@ -32,7 +32,7 @@ python add-run-screenshots-to-readme.py -s "C:\path\to\your\script.ps1"
 
 | Argument | Short | Description | Required | Default |
 | :--- | :--- | :--- | :--- | :--- |
-| `--script` | `-s` | Absolute or relative path to the `.ps1` or `.exe` target script. | **Yes** | *None* |
+| `--script` | `-s` | Absolute or relative path to the `.ps1`, `.exe`, or `.py` target script. | **Yes** | *None* |
 | `--arguments` | `-args` | Optional arguments to pass down to the standard run. | No | `""` (Empty string) |
 
 ### Example
