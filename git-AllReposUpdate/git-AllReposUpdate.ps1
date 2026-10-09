@@ -1,61 +1,61 @@
 <#
 ================================================================================
-  Nazwa skryptu : git-AllReposUpdate.ps1
-  Autor         : Roman Pindela
-  Kontakt       : roman.pindela@gmail.com
-  Wersja        : 1.0.0
-  Data wydania  : 2026-10-08
-  Licencja      : MIT
-  Repozytorium  : https://github.com/romanpindela/Dev
+  Script Name : git-AllReposUpdate.ps1
+  Author      : Roman Pindela
+  Contact     : roman.pindela@gmail.com
+  Version     : 1.0.0
+  Release Date: 2026-10-08
+  License     : MIT
+  Repository  : https://github.com/romanpindela/Dev
 
-  OPIS:
-    Skrypt automatyzuje proces aktualizacji wszystkich lokalnych repozytoriow Git
-    znajdujacych sie w zadanym katalogu roboczym (domyslnie C:\GitHub).
-    
-    Dla kazdego wykrytego repozytorium skrypt weryfikuje aktywna galaz, sprawdza
-    obecnosc niezatwierdzonych zmian (dirty worktree), pobiera najnowsze referencje
-    ze zdalnego serwera (git fetch) oraz bezpiecznie aktualizuje stan lokalny
-    (git pull --ff-only).
-    
-    W trakcie dzialania wyswietla czytelny, dynamiczny pasek postepu
-    (Write-Progress), na biezaco raportuje status kazdego projektu w konsoli
-    (wraz z dokladna liczba pobranych commitow), a na zakonczenie generuje
-    profesjonalne podsumowanie operacji.
+  DESCRIPTION:
+    Automates the process of updating all local Git repositories located
+    in the specified working directory (default: C:\GitHub).
 
-    Uruchomienie skryptu bez jakichkolwiek parametrow wyswietla szczegolowa
-    pomoc, informacje o wersji, autorze oraz przyklady uzycia.
+    For each detected repository, the script verifies the active branch,
+    checks for uncommitted local changes (dirty worktree), fetches the latest
+    references from the remote server (git fetch), and safely updates the local
+    state (git pull --ff-only).
+
+    During execution, it displays a responsive, dynamic progress bar
+    (Write-Progress), reports the real-time status of each project to the
+    console (including the exact number of pulled commits), and concludes
+    with a comprehensive execution summary.
+
+    Running the script without any parameters displays detailed help,
+    version and author information, and practical usage examples.
 
 ================================================================================
 .SYNOPSIS
-    Automatyczna synchronizacja i aktualizacja wszystkich lokalnych repozytoriow Git.
+    Automated synchronization and update of all local Git repositories.
 .DESCRIPTION
-    Skanuje podana sciezke w poszukiwaniu katalogow z podkatalogiem .git,
-    weryfikuje galezie oraz upstream, wykonuje fetch/pull i raportuje zmiany.
+    Scans the specified path for directories containing a .git subdirectory,
+    verifies branches and upstream tracking, executes fetch/pull, and reports changes.
 .PARAMETER Update
-    Flaga inicjujaca wykonanie procedury aktualizacji repozytoriow.
+    Switch initiating the repository update procedure.
 .PARAMETER Path
-    Katalog nadrzedny zawierajacy repozytoria Git. Domyslnie: C:\GitHub.
+    Parent directory containing Git repositories. Default: C:\GitHub.
 .PARAMETER Prune
-    Wlacza opcje czyszczenia nieistniejacych zdalnych galezi (git fetch -p / --prune).
+    Enables pruning of deleted remote branches (git fetch -p / --prune).
 .PARAMETER LogPath
-    Opcjonalna sciezka do pliku tekstowego ze szczegolowym logiem dzialania.
+    Optional path to a text file for detailed operation logging.
 .PARAMETER Help
-    Wyswietla szczegolowe menu pomocy, wersje, dane kontaktowe i przyklady.
+    Displays detailed help menu, version, contact information, and examples.
 .EXAMPLE
     .\git-AllReposUpdate.ps1
-    # Uruchomienie bez parametrow - wyswietla pomoc, przyklady i informacje o autorze
+    # Run without parameters - displays help, examples, and author info
 .EXAMPLE
     .\git-AllReposUpdate.ps1 -Update
-    # Aktualizuje wszystkie repozytoria w katalogu domyslnym C:\GitHub
+    # Updates all repositories in default directory C:\GitHub
 .EXAMPLE
     .\git-AllReposUpdate.ps1 -Path "C:\GitHub"
-    # Aktualizuje repozytoria w wybranym folderze
+    # Updates repositories in the specified directory
 .EXAMPLE
     .\git-AllReposUpdate.ps1 -Update -Prune
-    # Aktualizuje repozytoria z czyszczeniem usunietych referencji (prune)
+    # Updates repositories and prunes deleted remote references
 .EXAMPLE
     .\git-AllReposUpdate.ps1 -Update -LogPath "C:\Logs\git-update-report.txt"
-    # Aktualizuje repozytoria i zapisuje raport do wskazanego pliku logu
+    # Updates repositories and writes report to the specified log file
 .NOTES
     Author: Roman Pindela
     Email: roman.pindela@gmail.com
@@ -92,7 +92,7 @@ param (
 Set-StrictMode -Version Latest;
 $ErrorActionPreference = "Stop";
 
-# --- INFORMACJE O SKRYPCIE I METADANE ---
+# --- SCRIPT INFORMATION AND METADATA ---
 $SCRIPT_INFO = @{
     Name        = "git-AllReposUpdate";
     Version     = "1.0.0";
@@ -103,10 +103,10 @@ $SCRIPT_INFO = @{
     License     = "MIT";
 };
 
-# Globalny uchwyt do aktywnego pliku dziennika
+# Global handle for active log file
 $script:ActiveLogFile = $null;
 
-# --- FUNKCJE POMOCNICZE ---
+# --- HELPER FUNCTIONS ---
 
 function Write-Log {
     param (
@@ -131,46 +131,46 @@ function Show-HelpGuide {
     Write-Host @"
 ================================================================================
   $($SCRIPT_INFO.Name) - v$($SCRIPT_INFO.Version)
-  Autor: $($SCRIPT_INFO.Author) | Kontakt: $($SCRIPT_INFO.Contact)
-  GitHub: $($SCRIPT_INFO.GitHub) | Licencja: $($SCRIPT_INFO.License)
+  Author: $($SCRIPT_INFO.Author) | Contact: $($SCRIPT_INFO.Contact)
+  GitHub: $($SCRIPT_INFO.GitHub) | License: $($SCRIPT_INFO.License)
 ================================================================================
-OPIS:
-  Automatyczny menedzer aktualizacji lokalnych repozytoriow Git.
-  Przechodzi przez wszystkie podkatalogi w wyznaczonej sciezce (domyslnie C:\GitHub),
-  sprawdza stan galezi, pobiera najnowsze commity ze zdalnego serwera (git fetch)
-  oraz bezpiecznie synchronizuje zmiany lokalne (git pull --ff-only).
+DESCRIPTION:
+  Automated manager for synchronizing and updating local Git repositories.
+  Iterates through all subdirectories in the specified path (default: C:\GitHub),
+  verifies branch status, fetches latest commits from remote (git fetch),
+  and safely synchronizes local changes (git pull --ff-only).
 
-  Wyswietla dynamiczny pasek postepu, czytelny status na biezaco (z informacja
-  o ilosci commitow) oraz kompleksowe podsumowanie wykonanych operacji.
+  Displays a dynamic progress bar, real-time status updates (with commit counts),
+  and a comprehensive post-execution summary.
 
-UZYCIE:
-  .\git-AllReposUpdate.ps1 -Update [-Path <katalog>] [-Prune] [-LogPath <plik.txt>]
-  .\git-AllReposUpdate.ps1 -Path <katalog> [-Prune] [-LogPath <plik.txt>]
+USAGE:
+  .\git-AllReposUpdate.ps1 -Update [-Path <directory>] [-Prune] [-LogPath <file.txt>]
+  .\git-AllReposUpdate.ps1 -Path <directory> [-Prune] [-LogPath <file.txt>]
   .\git-AllReposUpdate.ps1 -h | -Help
 
-PARAMETRY:
-  -Update, -u, -Run, -All : Inicjuje automatyczna aktualizacje repozytoriow.
-  -Path, -p               : Sciezka do glownego folderu z repozytoriami Git.
-                            Domyslnie: C:\GitHub
-  -Prune                  : Czysci osierocone galezie zdalne (git fetch --prune).
-  -LogPath, -l, -Log      : [Opcjonalny] Zapisuje pelny raport i dziennik do pliku.
-  -Help, -h               : Wyswietla to menu pomocy oraz informacje o autorze.
+PARAMETERS:
+  -Update, -u, -Run, -All : Initiates automated repository update.
+  -Path, -p               : Path to root folder containing Git repositories.
+                            Default: C:\GitHub
+  -Prune                  : Prunes stale remote-tracking branches (git fetch --prune).
+  -LogPath, -l, -Log      : [Optional] Saves full report and log to a file.
+  -Help, -h               : Displays this help menu and author info.
 
-PRZYKLADY:
-  1) Wyswietlenie menu pomocy:
+EXAMPLES:
+  1) Display help menu:
      .\git-AllReposUpdate.ps1
      .\git-AllReposUpdate.ps1 -Help
 
-  2) Aktualizacja wszystkich repozytoriow w domyslnym C:\GitHub:
+  2) Update all repositories in default C:\GitHub:
      .\git-AllReposUpdate.ps1 -Update
 
-  3) Aktualizacja ze wskazaniem wlasnej sciezki:
-     .\git-AllReposUpdate.ps1 -Path "C:\Projekty\GitHub"
+  3) Update with custom path:
+     .\git-AllReposUpdate.ps1 -Path "C:\Projects\GitHub"
 
-  4) Aktualizacja z opcja czyszczenia galezi (prune):
+  4) Update with branch pruning:
      .\git-AllReposUpdate.ps1 -Update -Prune
 
-  5) Aktualizacja z zapisem logu do dedykowanego pliku:
+  5) Update and save log to a dedicated file:
      .\git-AllReposUpdate.ps1 -Update -LogPath "C:\Logs\git_sync.txt"
 ================================================================================
 "@ -ForegroundColor Cyan;
@@ -204,35 +204,35 @@ function Invoke-GitCmd {
     };
 }
 
-# --- WALIDACJA WEJSCIA I URUCHOMIENIE BEZ PARAMETROW ---
+# --- INPUT VALIDATION AND NO-ARGUMENT EXECUTION ---
 
-# Jesli wywolano z flaga pomocy badz uruchomiono calkowicie bez parametrow:
+# If invoked with help switch or completely without arguments:
 if ($Help -or ($PSBoundParameters.Count -eq 0)) {
     Show-HelpGuide;
     exit 0;
 }
 
-# --- SPRAWDZENIE WYMAGAN SYSTEMOWYCH ---
+# --- SYSTEM PREREQUISITES CHECK ---
 
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     [Console]::ForegroundColor = [ConsoleColor]::Red;
-    [Console]::WriteLine("[-] Blad krytyczny: Narzedzie 'git' nie zostalo odnalezione w sciezce systemowej PATH.");
-    [Console]::WriteLine("    Upewnij sie, ze Git for Windows jest zainstalowany i dostepny w srodowisku.");
+    [Console]::WriteLine("[-] Critical error: 'git' command not found in system PATH.");
+    [Console]::WriteLine("    Ensure Git for Windows is installed and accessible in the environment.");
     [Console]::ResetColor();
     exit 1;
 }
 
-# Rozwiazywanie pelnej sciezki katalogu nadrzednego
+# Resolve full parent directory path
 $resolvedPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path);
 
 if (-not (Test-Path -Path $resolvedPath -PathType Container)) {
     [Console]::ForegroundColor = [ConsoleColor]::Red;
-    [Console]::WriteLine("[-] Blad: Podana sciezka katalogu nie istnieje lub nie jest folderem: $resolvedPath");
+    [Console]::WriteLine("[-] Error: Specified directory path does not exist or is not a folder: $resolvedPath");
     [Console]::ResetColor();
     exit 1;
 }
 
-# Inicjalizacja pliku dziennika jesli podano parametr -LogPath
+# Initialize log file if -LogPath was specified
 if (-not [string]::IsNullOrWhiteSpace($LogPath)) {
     $resolvedLogPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($LogPath);
     $logDirectory = [System.IO.Path]::GetDirectoryName($resolvedLogPath);
@@ -242,33 +242,33 @@ if (-not [string]::IsNullOrWhiteSpace($LogPath)) {
     $script:ActiveLogFile = $resolvedLogPath;
 }
 
-# --- ROZPOCZECIE GLOWNEGO PROCESU ---
+# --- MAIN PROCESS EXECUTION ---
 
 try { Clear-Host; } catch {}
 Write-Log "================================================================================" Cyan;
-Write-Log "  $($SCRIPT_INFO.Name) v$($SCRIPT_INFO.Version) - Synchronizacja repozytoriow Git" Cyan;
-Write-Log "  Autor: $($SCRIPT_INFO.Author) | Kontakt: $($SCRIPT_INFO.Contact)" Gray;
-Write-Log "  Katalog zrodlowy : $resolvedPath" Yellow;
+Write-Log "  $($SCRIPT_INFO.Name) v$($SCRIPT_INFO.Version) - Git Repositories Synchronization" Cyan;
+Write-Log "  Author: $($SCRIPT_INFO.Author) | Contact: $($SCRIPT_INFO.Contact)" Gray;
+Write-Log "  Source Directory : $resolvedPath" Yellow;
 if (-not [string]::IsNullOrWhiteSpace($script:ActiveLogFile)) {
-    Write-Log "  Plik dziennika   : $script:ActiveLogFile" DarkCyan;
+    Write-Log "  Log File         : $script:ActiveLogFile" DarkCyan;
 }
 Write-Log "================================================================================" Cyan;
 Write-Log "" White;
 
-Write-Log "[*] Skanowanie katalogu w poszukiwaniu projektow Git..." DarkGray;
+Write-Log "[*] Scanning directory for Git projects..." DarkGray;
 
 $repoDirs = Get-ChildItem -Path $resolvedPath -Directory -ErrorAction SilentlyContinue |
     Where-Object { Test-Path -Path (Join-Path -Path $_.FullName -ChildPath ".git") }
 
 if ($null -eq $repoDirs -or $repoDirs.Count -eq 0) {
-    Write-Log "[!] Nie odnaleziono zadnych repozytoriow Git w podanej sciezce: $resolvedPath" Yellow;
+    Write-Log "[!] No Git repositories found in specified path: $resolvedPath" Yellow;
     exit 0;
 }
 
 $totalRepos = $repoDirs.Count;
-Write-Log "[+] Znaleziono $totalRepos repozytorium(ow) do weryfikacji.`n" Green;
+Write-Log "[+] Found $totalRepos repository(ies) to verify.`n" Green;
 
-# Klasy/struktury wynikowe
+# Results tracking
 $results = [System.Collections.Generic.List[PSCustomObject]]::new();
 $stopwatch = [System.Diagnostics.Stopwatch]::StartNew();
 
@@ -279,24 +279,24 @@ for ($i = 0; $i -lt $totalRepos; $i++) {
     $repoIndex    = $i + 1;
     $percent      = [math]::Round(($repoIndex / $totalRepos) * 100);
 
-    # Pasek postepu Write-Progress
-    Write-Progress -Activity "Aktualizacja repozytoriow Git ($resolvedPath)" `
-                   -Status "[$repoIndex/$totalRepos] Przetwarzanie: $repoName" `
+    # Progress bar Write-Progress
+    Write-Progress -Activity "Updating Git Repositories ($resolvedPath)" `
+                   -Status "[$repoIndex/$totalRepos] Processing: $repoName" `
                    -PercentComplete $percent;
 
-    # Inicjalizacja obiektu raportu
+    # Report item initialization
     $reportItem = [PSCustomObject]@{
         Name           = $repoName
         Path           = $repoFullName
-        Branch         = "Nieznana"
-        Status         = "Nieprzetworzone"
+        Branch         = "Unknown"
+        Status         = "Unprocessed"
         CommitsPulled  = 0
         CommitSubjects = @()
         Details        = ""
     };
 
     try {
-        # 1. Odczyt aktywnej galezi
+        # 1. Read active branch
         $branchResult = Invoke-GitCmd -RepoPath $repoFullName -Arguments "branch --show-current";
         $branch = $branchResult.StdOut;
         if ([string]::IsNullOrWhiteSpace($branch)) {
@@ -308,54 +308,54 @@ for ($i = 0; $i -lt $totalRepos; $i++) {
         }
         $reportItem.Branch = $branch;
 
-        # 2. Weryfikacja obecnosci commitow (unborn branch check)
+        # 2. Verify commit presence (unborn branch check)
         $headResult = Invoke-GitCmd -RepoPath $repoFullName -Arguments "rev-parse --verify --quiet HEAD";
         if ($headResult.ExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($headResult.StdOut)) {
-            $reportItem.Status = "Puste repozytorium";
-            $reportItem.Details = "Brak commitow w repozytorium (pusta lub nowa galaz)";
-            Write-Log "  [-] [PUSTE REPO]       $repoName ($branch) -> Brak commitow w repozytorium" Yellow;
+            $reportItem.Status = "Empty Repository";
+            $reportItem.Details = "No commits in repository (empty or new branch)";
+            Write-Log "  [-] [EMPTY REPO]       $repoName ($branch) -> No commits in repository" Yellow;
             $results.Add($reportItem);
             continue;
         }
         $oldHead = $headResult.StdOut;
 
-        # 3. Weryfikacja czy w repozytorium sa niezatwierdzone lokalne modyfikacje
+        # 3. Check for uncommitted local changes
         $dirtyResult = Invoke-GitCmd -RepoPath $repoFullName -Arguments "status --porcelain";
         $isDirty = (-not [string]::IsNullOrWhiteSpace($dirtyResult.StdOut));
 
-        # 4. Sprawdzenie skonfigurowanych serwerow zdalnych
+        # 4. Check configured remotes
         $remoteResult = Invoke-GitCmd -RepoPath $repoFullName -Arguments "remote";
         if ([string]::IsNullOrWhiteSpace($remoteResult.StdOut)) {
-            $reportItem.Status = "Brak remote";
-            $reportItem.Details = "Brak skonfigurowanego serwera zdalnego (origin)";
-            Write-Log "  [-] [BRAK REMOTE]      $repoName ($branch) -> Brak zdefiniowanego remote" Yellow;
+            $reportItem.Status = "No Remote";
+            $reportItem.Details = "No remote configured (origin)";
+            Write-Log "  [-] [NO REMOTE]        $repoName ($branch) -> No remote defined" Yellow;
             $results.Add($reportItem);
             continue;
         }
 
-        # 5. Pobranie najnowszych referencji ze zdalnego serwera (git fetch)
+        # 5. Fetch latest references from remote (git fetch)
         $fetchArgs = if ($Prune) { "fetch --prune" } else { "fetch" };
         $fetchResult = Invoke-GitCmd -RepoPath $repoFullName -Arguments $fetchArgs;
         if ($fetchResult.ExitCode -ne 0) {
-            $reportItem.Status = "Blad fetch";
-            $reportItem.Details = "Niepowodzenie operacji fetch: $($fetchResult.StdErr)";
-            Write-Log "  [-] [BLAD FETCH]       $repoName ($branch) -> $($reportItem.Details)" Red;
+            $reportItem.Status = "Fetch Error";
+            $reportItem.Details = "Fetch operation failed: $($fetchResult.StdErr)";
+            Write-Log "  [-] [FETCH ERROR]      $repoName ($branch) -> $($reportItem.Details)" Red;
             $results.Add($reportItem);
             continue;
         }
 
-        # 6. Weryfikacja galezi nadrzednej (upstream / tracking branch)
+        # 6. Check upstream / tracking branch
         $upstreamResult = Invoke-GitCmd -RepoPath $repoFullName -Arguments "rev-parse --abbrev-ref @{u}";
         $upstream = $upstreamResult.StdOut;
         if ($upstreamResult.ExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($upstream)) {
-            $reportItem.Status = "Brak upstream";
-            $reportItem.Details = "Galaz '$branch' nie sledzi zadnej galezi zdalnej";
-            Write-Log "  [-] [BRAK UPSTREAM]    $repoName ($branch) -> Brak powiazanej galezi zdalnej" DarkYellow;
+            $reportItem.Status = "No Upstream";
+            $reportItem.Details = "Branch '$branch' does not track any remote branch";
+            Write-Log "  [-] [NO UPSTREAM]      $repoName ($branch) -> No associated remote branch" DarkYellow;
             $results.Add($reportItem);
             continue;
         }
 
-        # 7. Wyliczenie ilosci commitow do pobrania (behind) oraz do wyslania (ahead)
+        # 7. Calculate commits behind and ahead
         $behindResult = Invoke-GitCmd -RepoPath $repoFullName -Arguments "rev-list HEAD..$upstream --count";
         $behindCount = 0;
         if ($behindResult.StdOut -match '^\d+$') {
@@ -368,22 +368,22 @@ for ($i = 0; $i -lt $totalRepos; $i++) {
             $aheadCount = [int]$aheadResult.StdOut;
         }
 
-        # 8. Wykonanie bezpiecznej aktualizacji (git pull --ff-only)
+        # 8. Safe update (git pull --ff-only)
         if ($behindCount -eq 0) {
             if ($aheadCount -gt 0) {
-                $reportItem.Status = "Bez zmian (Lokalne)";
-                $reportItem.Details = "Lokalna galaz wyprzedza zdalna o $aheadCount commit(ow)";
-                Write-Log "  [=] [BEZ ZMIAN]        $repoName ($branch) -> Aktualne (lokalnie: +$aheadCount commitow do push)" DarkGray;
+                $reportItem.Status = "Up to Date (Local Ahead)";
+                $reportItem.Details = "Local branch is ahead of remote by $aheadCount commit(s)";
+                Write-Log "  [=] [UP TO DATE]       $repoName ($branch) -> Up to date (locally: +$aheadCount commit(s) to push)" DarkGray;
             } else {
-                $reportItem.Status = "Bez zmian";
-                $reportItem.Details = "Repozytorium jest w pelni aktualne";
-                Write-Log "  [=] [BEZ ZMIAN]        $repoName ($branch) -> Aktualne" DarkGray;
+                $reportItem.Status = "Up to Date";
+                $reportItem.Details = "Repository is completely up to date";
+                Write-Log "  [=] [UP TO DATE]       $repoName ($branch) -> Up to date" DarkGray;
             }
         }
         else {
-            # Istnieja nowe commity do pobrania!
+            # New commits to pull!
             if ($isDirty) {
-                $reportItem.Details = "Niezatwierdzone lokalne modyfikacje przed pull. ";
+                $reportItem.Details = "Uncommitted local changes before pull. ";
             }
 
             $pullResult = Invoke-GitCmd -RepoPath $repoFullName -Arguments "pull --ff-only";
@@ -399,64 +399,64 @@ for ($i = 0; $i -lt $totalRepos; $i++) {
                     }
                 }
 
-                $reportItem.Status         = "Zaktualizowano";
+                $reportItem.Status         = "Updated";
                 $reportItem.CommitsPulled  = $behindCount;
                 $reportItem.CommitSubjects = $pulledSubjects;
-                $reportItem.Details       += "Pobrano $behindCount commit(ow) pomyslnie.";
+                $reportItem.Details       += "Pulled $behindCount commit(s) successfully.";
 
-                Write-Log "  [+] [ZAKTUALIZOWANO]   $repoName ($branch) -> +$behindCount commit(ow)" Green;
+                Write-Log "  [+] [UPDATED]          $repoName ($branch) -> +$behindCount commit(s)" Green;
                 if ($pulledSubjects.Count -gt 0) {
                     foreach ($subj in $pulledSubjects | Select-Object -First 3) {
                         Write-Log "      * $subj" DarkGreen;
                     }
                     if ($pulledSubjects.Count -gt 3) {
                         $remaining = $pulledSubjects.Count - 3;
-                        Write-Log "      * ... oraz $remaining kolejnych commitow" DarkGreen;
+                        Write-Log "      * ... and $remaining more commit(s)" DarkGreen;
                     }
                 }
             }
             else {
-                $reportItem.Status  = "Blad pull";
-                $reportItem.Details = "Niepowodzenie git pull: $($pullResult.StdErr)";
-                Write-Log "  [!] [BLAD PULL]        $repoName ($branch) -> $($reportItem.Details)" Red;
+                $reportItem.Status  = "Pull Error";
+                $reportItem.Details = "git pull failed: $($pullResult.StdErr)";
+                Write-Log "  [!] [PULL ERROR]       $repoName ($branch) -> $($reportItem.Details)" Red;
             }
         }
     }
     catch {
-        $reportItem.Status  = "Wyjatek";
-        $reportItem.Details = "Nieoczekiwany blad: $($_.Exception.Message)";
-        Write-Log "  [!] [WYJATEK]          $repoName -> $($reportItem.Details)" Red;
+        $reportItem.Status  = "Exception";
+        $reportItem.Details = "Unexpected error: $($_.Exception.Message)";
+        Write-Log "  [!] [EXCEPTION]        $repoName -> $($reportItem.Details)" Red;
     }
 
     $results.Add($reportItem);
 }
 
-# Zamkniecie paska postepu
-Write-Progress -Activity "Aktualizacja repozytoriow Git" -Completed;
+# Close progress bar
+Write-Progress -Activity "Updating Git Repositories" -Completed;
 $stopwatch.Stop();
 
-# --- ANALIZA WYNIKOW I PODSUMOWANIE ---
+# --- RESULTS ANALYSIS AND SUMMARY ---
 
-$updatedRepos = @($results | Where-Object { $_.Status -eq "Zaktualizowano" });
-$upToDateRepos = @($results | Where-Object { $_.Status -like "Bez zmian*" });
-$issueRepos    = @($results | Where-Object { $_.Status -notmatch "^(Zaktualizowano|Bez zmian)" });
+$updatedRepos  = @($results | Where-Object { $_.Status -eq "Updated" });
+$upToDateRepos = @($results | Where-Object { $_.Status -like "Up to Date*" });
+$issueRepos    = @($results | Where-Object { $_.Status -notmatch "^(Updated|Up to Date)" });
 
 Write-Log "" White;
 Write-Log "================================================================================" Cyan;
-Write-Log "                       PODSUMOWANIE SYNCHRONIZACJI GIT                          " Cyan;
+Write-Log "                       GIT SYNCHRONIZATION SUMMARY                              " Cyan;
 Write-Log "================================================================================" Cyan;
-Write-Log "Katalog roboczy           : $resolvedPath" White;
-Write-Log "Wszystkich repozytoriow   : $totalRepos" White;
-Write-Log "Zaktualizowane            : $($updatedRepos.Count)" Green;
-Write-Log "Bez zmian (aktualne)      : $($upToDateRepos.Count)" Gray;
-Write-Log "Wymagajace uwagi / inne   : $($issueRepos.Count)" $(if ($issueRepos.Count -gt 0) { [ConsoleColor]::Yellow } else { [ConsoleColor]::Gray });
-Write-Log "Calkowity czas wykonania  : $($stopwatch.Elapsed.ToString("mm\:ss\.ff"))" DarkCyan;
+Write-Log "Working directory         : $resolvedPath" White;
+Write-Log "Total repositories        : $totalRepos" White;
+Write-Log "Updated                   : $($updatedRepos.Count)" Green;
+Write-Log "Up to date                : $($upToDateRepos.Count)" Gray;
+Write-Log "Requires attention/other  : $($issueRepos.Count)" $(if ($issueRepos.Count -gt 0) { [ConsoleColor]::Yellow } else { [ConsoleColor]::Gray });
+Write-Log "Total execution time      : $($stopwatch.Elapsed.ToString("mm\:ss\.ff"))" DarkCyan;
 Write-Log "--------------------------------------------------------------------------------" DarkGray;
 
 if ($updatedRepos.Count -gt 0) {
-    Write-Log "`n[+] REPOZYTORIA ZAKTUALIZOWANE:" Green;
+    Write-Log "`n[+] UPDATED REPOSITORIES:" Green;
     foreach ($r in $updatedRepos) {
-        Write-Log "  * $($r.Name) [$($r.Branch)] : pobrano $($r.CommitsPulled) commit(ow)" Green;
+        Write-Log "  * $($r.Name) [$($r.Branch)] : pulled $($r.CommitsPulled) commit(s)" Green;
         foreach ($sub in $r.CommitSubjects | Select-Object -First 2) {
             Write-Log "      - $sub" DarkGreen;
         }
@@ -464,21 +464,21 @@ if ($updatedRepos.Count -gt 0) {
 }
 
 if ($upToDateRepos.Count -gt 0) {
-    Write-Log "`n[=] REPOZYTORIA BEZ ZMIAN (AKTUALNE):" Gray;
+    Write-Log "`n[=] UP TO DATE REPOSITORIES:" Gray;
     $upToDateNames = ($upToDateRepos | ForEach-Object { "$($_.Name) [$($_.Branch)]" }) -join ", ";
     Write-Log "  $upToDateNames" DarkGray;
 }
 
 if ($issueRepos.Count -gt 0) {
-    Write-Log "`n[!] REPOZYTORIA WYMAGAJACE UWAGI / PUSTE / BLEDY:" Yellow;
+    Write-Log "`n[!] REPOSITORIES REQUIRING ATTENTION / EMPTY / ERRORS:" Yellow;
     foreach ($r in $issueRepos) {
-        Write-Log "  * $($r.Name) [$($r.Branch)] : Status: $($r.Status) | Szczegoly: $($r.Details)" Yellow;
+        Write-Log "  * $($r.Name) [$($r.Branch)] : Status: $($r.Status) | Details: $($r.Details)" Yellow;
     }
 }
 
 Write-Log "`n================================================================================" Cyan;
 if (-not [string]::IsNullOrWhiteSpace($script:ActiveLogFile)) {
-    Write-Log "Raport z synchronizacji zostal zapisany w: $script:ActiveLogFile" Green;
+    Write-Log "Synchronization report saved to: $script:ActiveLogFile" Green;
     Write-Log "================================================================================" Cyan;
 }
-Write-Log "Kontakt z autorem: $($SCRIPT_INFO.Contact)`n" Gray;
+Write-Log "Author contact: $($SCRIPT_INFO.Contact)`n" Gray;

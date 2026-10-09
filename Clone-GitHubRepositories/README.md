@@ -1,30 +1,46 @@
-# Clone-GitHubRepositories – Dokumentacja i Instrukcja
+# Clone-GitHubRepositories – Documentation & Usage Guide
 
-**Autor:** Roman Pindela
-**GitHub:** [https://github.com/romanpindela](https://github.com/romanpindela)
-**E-mail:** romanpindela@gmail.com
-**Wersja:** 1.1.0
-## 1. Przeznaczenie narzędzia
-Skrypt `Clone-GitHubRepositories.ps1` służy do zautomatyzowanego pobierania oraz aktualizowania zestawu repozytoriów z platformy GitHub na lokalny dysk roboczy. Dedykowany jest do środowisk deweloperskich i administracyjnych wykorzystujących **Visual Studio Code**.
-Kluczowe właściwości:
-- **Brak na sztywno wpisanych repozytoriów** – lista projektów wczytywana jest dynamicznie z zewnętrznego pliku tekstowego.
-- **Idempotentność** – jeżeli repozytorium nie istnieje lokalnie, skrypt wykonuje `git clone`; jeśli już istnieje, synchronizuje gałąź za pomocą bezpiecznego `git pull --ff-only`.
-- **Wbudowana pomoc** – uruchomienie bez argumentów lub z flagą `-Help` / `-h` wyświetla pełną składnię, parametry i dane kontaktowe.
-- **Elastyczność protokołów** – wsparcie dla protokołów **HTTPS** oraz **SSH**.
-## 2. Wymagania systemowe
-1. System operacyjny Windows 10 / Windows 11 lub Windows Server.
-2. PowerShell 5.1 lub PowerShell 7+.
-3. Zainstalowany [Git for Windows](https://git-scm.com/) z dostępem w zmiennej środowiskowej PATH.
-4. Visual Studio Code do późniejszej pracy z kodem.
-## 3. Struktura plików
+**Author:** Roman Pindela  
+**GitHub:** [https://github.com/romanpindela](https://github.com/romanpindela)  
+**Email:** romanpindela@gmail.com  
+**Version:** 1.1.0  
 
-katalog_roboczy/
+---
+
+## 1. Tool Purpose
+The `Clone-GitHubRepositories.ps1` script automates downloading and updating a designated set of GitHub repositories to a local working directory. It is designed for development and administrative environments leveraging **Visual Studio Code**.
+
+Key Features:
+- **No Hardcoded Repositories** – The list of projects is dynamically loaded from an external text file.
+- **Idempotence** – If a repository does not exist locally, the script executes `git clone`; if it already exists, it synchronizes the branch using a safe `git pull --ff-only`.
+- **Built-in Help** – Running without arguments or with `-Help` / `-h` displays complete syntax, parameters, and author information.
+- **Protocol Flexibility** – Supports both **HTTPS** and **SSH** cloning protocols.
+
+---
+
+## 2. System Requirements
+1. Windows 10 / Windows 11 or Windows Server.
+2. PowerShell 5.1 or PowerShell 7+.
+3. [Git for Windows](https://git-scm.com/) installed and accessible in the system PATH.
+4. Visual Studio Code for subsequent codebase work.
+
+---
+
+## 3. Directory Structure
+
+```text
+working_directory/
 │
-├── Clone-GitHubRepositories.ps1    # Główny skrypt PowerShell
-└── repositoriesToClone.txt         # Lista nazw repozytoriów (po jednym w linii)
-## 4. Konfiguracja listy (`repositoriesToClone.txt`)
-W pliku umieszczamy same nazwy repozytoriów użytkownika. Linie puste oraz zaczynające się od `#` są automatycznie pomijane.
+├── Clone-GitHubRepositories.ps1    # Main PowerShell script
+└── repositoriesToClone.txt         # Repository name list (one per line)
+```
 
+---
+
+## 4. Repository List Configuration (`repositoriesToClone.txt`)
+Place raw repository names in the file. Blank lines and lines starting with `#` are automatically ignored.
+
+```text
 Automation
 Microsoft-365
 Active-Directory
@@ -32,29 +48,50 @@ Windows-Desktop
 Windows-Server
 Dev
 Forensic
-## 5. Parametry skryptu
-| Parametr | Typ / Wartość | Opis |
-| --- | --- | --- |
-| `-RepositoriesFile` | Ścieżka (String) | Ścieżka do pliku z listą repozytoriów (np. `.\repositoriesToClone.txt`). |
-| `-TargetDir` | Ścieżka (String) | Katalog docelowy, w którym zostaną sklonowane repozytoria (np. `C:\dane\rpindela\GitHub`). |
-| `-Username` | String | Nazwa konta GitHub (wartość domyślna: `romanpindela`). |
-| `-AuthProtocol` | `HTTPS` \| `SSH` | Wybór protokołu klonowania (wartość domyślna: `HTTPS`). |
-| `-Help` / `-h` | Switch | Wyświetla wbudowany ekran pomocy oraz informacje autorskie i kończy działanie. |
-## 6. Przykłady wywołania
-### Wyświetlenie pomocy:
+```
 
+---
+
+## 5. Script Parameters
+
+| Parameter | Type / Value | Description |
+| :--- | :--- | :--- |
+| `-RepositoriesFile` | String (Path) | Path to the text file containing repository names (e.g., `.\repositoriesToClone.txt`). |
+| `-TargetDir` | String (Path) | Target folder where repositories will be cloned (e.g., `C:\GitHub`). |
+| `-Username` | String | GitHub username (default: `romanpindela`). |
+| `-AuthProtocol` | `HTTPS` \| `SSH` | Cloning protocol selection (default: `HTTPS`). |
+| `-Help` / `-h` | Switch | Displays built-in help and author information, then exits. |
+
+---
+
+## 6. Usage Examples
+
+### Display Help:
+```powershell
 powershell .\Clone-GitHubRepositories.ps1 -Help
-### Klonowanie standardowe przez HTTPS:
+```
 
-powershell .\Clone-GitHubRepositories.ps1 -RepositoriesFile ".\repositoriesToClone.txt" -TargetDir "C:\dane\rpindela\GitHub"
-### Klonowanie przez SSH:
+### Standard Cloning via HTTPS:
+```powershell
+powershell .\Clone-GitHubRepositories.ps1 -RepositoriesFile ".\repositoriesToClone.txt" -TargetDir "C:\GitHub"
+```
 
-powershell .\Clone-GitHubRepositories.ps1 -RepositoriesFile ".\repositoriesToClone.txt" -TargetDir "C:\dane\rpindela\GitHub" -AuthProtocol SSH
-## 7. Praca w Visual Studio Code
-Po pobraniu repozytoriów do katalogu docelowego można natychmiast otworzyć całe środowisko robocze za pomocą wiersza poleceń:
+### Cloning via SSH:
+```powershell
+powershell .\Clone-GitHubRepositories.ps1 -RepositoriesFile ".\repositoriesToClone.txt" -TargetDir "C:\GitHub" -AuthProtocol SSH
+```
 
-code C:\dane\rpindela\GitHub
-Lub otworzyć pojedyncze wybrane repozytorium:
+---
 
-code C:\dane\rpindela\GitHub\Windows-Desktop
+## 7. Working with Visual Studio Code
+After cloning repositories into the destination directory, open the entire workspace directly from the command line:
 
+```powershell
+code C:\GitHub
+```
+
+Or open a single target repository:
+
+```powershell
+code C:\GitHub\Windows-Desktop
+```
