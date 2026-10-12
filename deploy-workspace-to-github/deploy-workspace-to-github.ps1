@@ -24,7 +24,7 @@
     Author: Roman Pindela
     Email: roman.pindela@gmail.com
     GitHub: https://github.com/romanpindela
-    Version: 1.2.0
+    Version: 1.2.1
 #>
 
 param (
@@ -47,7 +47,7 @@ function Show-ScriptHelp {
     Write-Host "=====================================================================" -ForegroundColor Cyan
     Write-Host "          ENTERPRISE WORKSPACE INITIALIZATION & DEPLOYMENT ENGINE" -ForegroundColor Cyan
     Write-Host "=====================================================================" -ForegroundColor Cyan
-    Write-Host "Version : 1.2.0" -ForegroundColor Yellow
+    Write-Host "Version : 1.2.1" -ForegroundColor Yellow
     Write-Host "Author  : Roman Pindela (roman.pindela@gmail.com)" -ForegroundColor Yellow
     Write-Host "GitHub  : https://github.com/romanpindela" -ForegroundColor Yellow
     Write-Host "---------------------------------------------------------------------"
@@ -86,6 +86,11 @@ Write-Host "[*] Auditing automation environment state variables..." -ForegroundC
 
 # Step 1: Binary Dependency Check
 if (-not (Get-Command git -ErrorAction SilentlyContinue) -or -not (Get-Command gh -ErrorAction SilentlyContinue)) {
+    # Refresh process PATH from registry in case dependencies were recently installed
+    $env:Path = [System.Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [System.Environment]::GetEnvironmentVariable('Path', 'User')
+}
+
+if (-not (Get-Command git -ErrorAction SilentlyContinue) -or -not (Get-Command gh -ErrorAction SilentlyContinue)) {
     Write-Error "Missing Dependency: Ensure both 'git.exe' and 'gh.exe' (GitHub CLI) binaries reside within system execution environments."
     Exit 1
 }
@@ -111,6 +116,13 @@ Set-Location -Path $AbsoluteTargetBranchPath
 
 if (-not (Test-Path (Join-Path $AbsoluteTargetBranchPath ".git"))) {
     Write-Host "[+] Local tracking files absent. Instantiating a new Git structure..." -ForegroundColor Blue
+    
+    # Ensure there is at least one file so initial commit succeeds if directory was empty
+    $ExistingFiles = Get-ChildItem -Path $AbsoluteTargetBranchPath -Force
+    if (-not $ExistingFiles) {
+        Set-Content -Path (Join-Path $AbsoluteTargetBranchPath "README.md") -Value "# $RepositoryName" -Encoding utf8
+    }
+
     git init -b $MainBranch
     git add .
     git commit -m "Initial commit: Production scripts ingestion layout"
