@@ -97,8 +97,6 @@ C:\Dane\rpindela\GitHub\Dev\
 │   │   └── Success.jpg                                # Full execution and signature verification view
 │   ├── Enable-GitCommitSigning.ps1                    # Main production automation script
 │   └── README.md                                      # Comprehensive documentation (this file)
-│
-├── Enable-GitCommitSigning.ps1                        # Root proxy launcher (convenience wrapper)
 └── README.md                                          # Dev repository index
 ```
 

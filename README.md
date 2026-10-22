@@ -74,7 +74,6 @@ C:\Dane\rpindela\GitHub\Dev\
 ├── initialize-gitignore/            # Comprehensive .gitignore template generator
 ├── invoke-github-script/            # Secure remote script execution utility
 ├── add-run-screenshots-to-readme/   # Automated documentation screenshot integration helper
-├── Enable-GitCommitSigning.ps1      # Root convenience launcher for commit signing
 ├── .gitignore                       # Global git ignore definitions
 └── README.md                        # Master repository documentation (this file)
 ```
