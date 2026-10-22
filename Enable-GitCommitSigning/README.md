@@ -38,6 +38,7 @@ A production-grade, enterprise-ready PowerShell automation engine that provision
 10. [Event Logging](#10-event-logging)
 11. [Troubleshooting & FAQ](#11-troubleshooting--faq)
 12. [Security & Script Unblocking](#12-security--script-unblocking)
+13. [Screenshots & Visual Walkthrough](#13-screenshots--visual-walkthrough)
 
 ---
 
@@ -89,11 +90,16 @@ Starting with **Git 2.34**, Git natively supports signing commits and tags direc
 C:\Dane\rpindela\GitHub\Dev\
 │
 ├── Enable-GitCommitSigning\
-│   ├── Enable-GitCommitSigning.ps1    # Main production automation script
-│   └── README.md                      # Comprehensive documentation (this file)
+│   ├── assets/
+│   │   ├── Standard_run.jpg                           # Empty-run help guide view
+│   │   ├── Adding_new_ssh_key_to_github_account.jpg   # GitHub SSH signing key registration dialog
+│   │   ├── Adding_new_ssh_key_to_github_account2.jpg  # GitHub SSH keys overview dashboard
+│   │   └── Success.jpg                                # Full execution and signature verification view
+│   ├── Enable-GitCommitSigning.ps1                    # Main production automation script
+│   └── README.md                                      # Comprehensive documentation (this file)
 │
-├── Enable-GitCommitSigning.ps1        # Root proxy launcher (convenience wrapper)
-└── README.md                          # Dev repository index
+├── Enable-GitCommitSigning.ps1                        # Root proxy launcher (convenience wrapper)
+└── README.md                                          # Dev repository index
 ```
 
 ---
@@ -184,6 +190,8 @@ If GitHub CLI is not installed, lacks the signing scope, or `-RegistrationMode M
    - Change **Key type** from *Authentication Key* to **Signing Key**.
    - Paste the public key from your clipboard (Ctrl + V).
    - Click **Add SSH key**.
+
+![Adding New SSH Key to GitHub](assets/Adding_new_ssh_key_to_github_account.jpg)
 
 ---
 
@@ -285,3 +293,23 @@ Or for all scripts in the repository:
 ```powershell
 Get-ChildItem -Path "C:\Dane\rpindela\GitHub\Dev" -Recurse -Filter "*.ps1" | Unblock-File
 ```
+
+---
+
+## 13. Screenshots & Visual Walkthrough
+
+### 1. Interactive Help Menu & Metadata (Empty-Run Safeguard)
+Executed by running `.\Enable-GitCommitSigning.ps1` without any parameters:
+![Standard Run](assets/Standard_run.jpg)
+
+### 2. GitHub Web Portal - Registering Signing Key
+Selecting **Signing Key** (instead of *Authentication Key*) in GitHub account settings:
+![Adding New SSH Key to GitHub](assets/Adding_new_ssh_key_to_github_account.jpg)
+
+### 3. GitHub SSH Keys Dashboard Overview
+Viewing verified registered signing keys in your GitHub account dashboard:
+![GitHub SSH Keys Dashboard](assets/Adding_new_ssh_key_to_github_account2.jpg)
+
+### 4. Successful End-to-End Execution & Signature Verification
+Complete onboarding execution demonstrating all 7 automated stages, sandbox cryptographic verification, and active signing summary:
+![Execution Success](assets/Success.jpg)
