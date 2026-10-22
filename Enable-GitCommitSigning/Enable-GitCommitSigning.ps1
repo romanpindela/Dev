@@ -308,14 +308,15 @@ function Format-NormalizedPath {
     return ($Path -replace '\\', '/').Trim()
 }
 
-function Invoke-GitProcess {
+function Invoke-CliProcess {
     param (
+        [string]$FileName,
         [string]$Arguments,
         [string]$WorkingDirectory = $PWD.Path
     )
 
     $pinfo = New-Object System.Diagnostics.ProcessStartInfo
-    $pinfo.FileName = "git.exe"
+    $pinfo.FileName = $FileName
     $pinfo.Arguments = $Arguments
     if (-not [string]::IsNullOrWhiteSpace($WorkingDirectory) -and (Test-Path $WorkingDirectory)) {
         $pinfo.WorkingDirectory = $WorkingDirectory
@@ -337,6 +338,22 @@ function Invoke-GitProcess {
         StdOut   = if ($stdOut) { $stdOut.Trim() } else { "" }
         StdErr   = if ($stdErr) { $stdErr.Trim() } else { "" }
     }
+}
+
+function Invoke-GitProcess {
+    param (
+        [string]$Arguments,
+        [string]$WorkingDirectory = $PWD.Path
+    )
+    return Invoke-CliProcess -FileName "git.exe" -Arguments $Arguments -WorkingDirectory $WorkingDirectory
+}
+
+function Invoke-GhProcess {
+    param (
+        [string]$Arguments,
+        [string]$WorkingDirectory = $PWD.Path
+    )
+    return Invoke-CliProcess -FileName "gh.exe" -Arguments $Arguments -WorkingDirectory $WorkingDirectory
 }
 
 # --- HELP DISPLAY (EMPTY-RUN SAFEGUARD) ---
@@ -523,10 +540,11 @@ $ghAuthStatus = $false
 $ghHasSigningScope = $false
 
 if ($hasGhCli) {
-    $authCheck = gh auth status 2>&1 | Out-String
-    if ($authCheck -match "Logged in to github.com") {
+    $authCheck = Invoke-GhProcess -Arguments "auth status"
+    $combinedAuth = "$($authCheck.StdOut)`n$($authCheck.StdErr)"
+    if ($combinedAuth -match "Logged in to github.com") {
         $ghAuthStatus = $true
-        if ($authCheck -match "admin:ssh_signing_key") {
+        if ($combinedAuth -match "admin:ssh_signing_key") {
             $ghHasSigningScope = $true
         }
     }
@@ -598,20 +616,19 @@ function Step-1-EnsureKeyExists {
     # Ensure public key exists
     if (-not (Test-Path $resolvedPubKeyPath)) {
         Write-Log "  [*] Generating missing public key from private key..." "INFO" DarkGray
-        $pubArgs = "-y -f `"$resolvedKeyPath`""
-        $pubContent = & ssh-keygen.exe -y -f "$resolvedKeyPath"
-        if (-not [string]::IsNullOrWhiteSpace($pubContent)) {
-            Set-Content -Path $resolvedPubKeyPath -Value $pubContent -Encoding utf8
+        $pubRes = Invoke-CliProcess -FileName "ssh-keygen.exe" -Arguments "-y -f `"$resolvedKeyPath`""
+        if ($pubRes.ExitCode -eq 0 -and -not [string]::IsNullOrWhiteSpace($pubRes.StdOut)) {
+            Set-Content -Path $resolvedPubKeyPath -Value $pubRes.StdOut -Encoding utf8
         } else {
-            Write-Log "[-] Failed to derive public key from private key." "ERROR" Red
+            Write-Log "[-] Failed to derive public key from private key: $($pubRes.StdErr)" "ERROR" Red
             exit 1
         }
     }
 
     $pubKeyText = (Get-Content -Path $resolvedPubKeyPath -Raw).Trim()
     Write-Log "  [+] Public Key Fingerprint:" "INFO" Gray
-    $fpResult = & ssh-keygen.exe -l -f "$resolvedPubKeyPath"
-    Write-Log "      $fpResult" "RAW" DarkCyan
+    $fpRes = Invoke-CliProcess -FileName "ssh-keygen.exe" -Arguments "-l -f `"$resolvedPubKeyPath`""
+    Write-Log "      $($fpRes.StdOut)" "RAW" DarkCyan
 }
 
 function Step-2-ConfigureGitGlobal {
@@ -712,12 +729,11 @@ function Step-4-ConfigureSshAgent {
     # Attempt to add key via ssh-add if agent is running
     $refreshedService = Get-Service -Name "ssh-agent" -ErrorAction SilentlyContinue
     if ($refreshedService -and $refreshedService.Status -eq [System.ServiceProcess.ServiceControllerStatus]::Running) {
-        try {
-            $addResult = & ssh-add.exe "$resolvedKeyPath" 2>&1
-            Write-Log "  [+] Loaded key into OpenSSH Agent: $addResult" "INFO" DarkGray
-        }
-        catch {
-            Write-Log "  [!] Unable to load key into ssh-agent: $_" "WARN" DarkYellow
+        $addRes = Invoke-CliProcess -FileName "ssh-add.exe" -Arguments "`"$resolvedKeyPath`""
+        if ($addRes.ExitCode -eq 0) {
+            Write-Log "  [SUCCESS] Loaded key into OpenSSH Agent." "SUCCESS" Green
+        } else {
+            Write-Log "  [!] ssh-add notice: $($addRes.StdErr) $($addRes.StdOut)" "INFO" DarkGray
         }
     } else {
         Write-Log "  [*] ssh-agent service is Stopped/Disabled. Git will sign directly via key file." "INFO" DarkGray
@@ -747,28 +763,35 @@ function Step-5-RegisterKeyOnGitHub {
     $registeredSuccessfully = $false
 
     if ($targetMode -eq "Auto" -and $hasGhCli -and $ghAuthStatus) {
-        Write-Log "  [*] Attempting automated registration via GitHub CLI (gh)..." "INFO" Blue
+        Write-Log "  [*] Inspecting GitHub CLI authorization and scopes..." "INFO" Blue
 
-        # First verify if key already exists on GitHub
-        $existingKeys = gh ssh-key list 2>&1 | Out-String
-        if ($existingKeys -match [regex]::Escape($pubKeyText.Substring(0, [math]::Min(30, $pubKeyText.Length)))) {
-            Write-Log "  [+] Key appears to already be registered on your GitHub account." "INFO" Green
-            $registeredSuccessfully = $true
+        if (-not $ghHasSigningScope) {
+            Write-Log "  [!] GitHub CLI token is missing 'admin:ssh_signing_key' scope." "WARN" Yellow
+            Write-Log "      (To grant it in gh: gh auth refresh -h github.com -s admin:ssh_signing_key)" "WARN" DarkCyan
+            Write-Log "      Switching to semi-automated registration workflow..." "WARN" Yellow
+            $targetMode = "Manual"
         } else {
-            # Attempt to add key as signing key
-            $addOutput = gh ssh-key add "$resolvedPubKeyPath" --title "$resolvedKeyTitle" --type signing 2>&1 | Out-String
-            $addExit = $LASTEXITCODE
-
-            if ($addExit -eq 0) {
-                Write-Log "  [SUCCESS] Key successfully registered on GitHub as a Signing Key!" "SUCCESS" Green
+            # Check if key already exists on GitHub
+            $listRes = Invoke-GhProcess -Arguments "ssh-key list"
+            $combinedKeys = "$($listRes.StdOut)`n$($listRes.StdErr)"
+            $pubSnippet = $pubKeyText.Substring(0, [math]::Min(30, $pubKeyText.Length))
+            if ($combinedKeys -match [regex]::Escape($pubSnippet)) {
+                Write-Log "  [+] Key appears to already be registered on your GitHub account." "INFO" Green
                 $registeredSuccessfully = $true
-            } elseif ($addOutput -match "admin:ssh_signing_key") {
-                Write-Log "  [!] GitHub CLI token is missing 'admin:ssh_signing_key' scope." "WARN" Yellow
-                Write-Log "      Switching to semi-automated registration workflow..." "WARN" Yellow
-                $targetMode = "Manual"
             } else {
-                Write-Log "  [!] GitHub CLI registration returned: $($addOutput.Trim())" "WARN" Yellow
-                $targetMode = "Manual"
+                # Attempt to add key as signing key
+                $addRes = Invoke-GhProcess -Arguments "ssh-key add `"$resolvedPubKeyPath`" --title `"$resolvedKeyTitle`" --type signing"
+                if ($addRes.ExitCode -eq 0) {
+                    Write-Log "  [SUCCESS] Key successfully registered on GitHub as a Signing Key!" "SUCCESS" Green
+                    $registeredSuccessfully = $true
+                } elseif ($addRes.StdErr -match "admin:ssh_signing_key" -or $addRes.StdOut -match "admin:ssh_signing_key") {
+                    Write-Log "  [!] GitHub CLI token is missing 'admin:ssh_signing_key' scope." "WARN" Yellow
+                    Write-Log "      Switching to semi-automated registration workflow..." "WARN" Yellow
+                    $targetMode = "Manual"
+                } else {
+                    Write-Log "  [!] GitHub CLI registration notice: $($addRes.StdErr) $($addRes.StdOut)" "WARN" Yellow
+                    $targetMode = "Manual"
+                }
             }
         }
     } elseif ($targetMode -eq "Auto") {
@@ -820,6 +843,8 @@ function Step-5-RegisterKeyOnGitHub {
         Write-Host $pubKeyText -ForegroundColor White
         Write-Host "================================================================================" -ForegroundColor Yellow
         Write-Host ""
+        Write-Host "Press [Enter] to proceed with signature verification once added..." -ForegroundColor Yellow
+        try { [Console]::ReadLine() | Out-Null } catch {}
     }
 }
 
