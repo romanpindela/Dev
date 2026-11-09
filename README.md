@@ -34,6 +34,7 @@ A collection of production-grade automation scripts and utilities designed to st
   - [configure-powershell](#8-configure-powershell-)
   - [convert-ps2exe](#9-convert-ps2exe-)
   - [invoke-github-script](#10-invoke-github-script-)
+  - [git-DownloadUserMyRepos](#11-git-downloadusermyrepos-)
 - [Getting Started](#-getting-started)
 - [Contributing](#-contributing)
 - [License](#-license)
@@ -149,6 +150,11 @@ C:\Dane\rpindela\GitHub\Dev\
 * **Location:** [`invoke-github-script/`](./invoke-github-script/)
 * **Script:** [`invoke-github-script.ps1`](./invoke-github-script/invoke-github-script.ps1)
 * **Description:** Downloads and securely executes scripts directly from GitHub repositories.
+
+### 11. git-DownloadUserMyRepos 📦
+* **Location:** [`git-DownloadUserMyRepos/`](./git-DownloadUserMyRepos/)
+* **Script:** [`git-DownloadUserMyRepos.ps1`](./git-DownloadUserMyRepos/git-DownloadUserMyRepos.ps1)
+* **Description:** Automates mass cloning and synchronization (`git pull`) of all GitHub repositories owned by a user or organization account, supporting PAT authentication, REST API pagination, and UTF-8 event logging.
 
 ---
 
