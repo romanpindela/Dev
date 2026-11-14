@@ -1,6 +1,6 @@
 <#
 ================================================================================
-  Script Name : git-DownloadUserMyRepos.ps1
+  Script Name : Sync-GitHubUserRepos.ps1
   Author      : Roman Pindela
   Contact     : roman.pindela@gmail.com
   Version     : 1.2.0
@@ -75,16 +75,16 @@
 .PARAMETER Help
     Displays detailed help menu, author info, and practical examples.
 .EXAMPLE
-    .\git-DownloadUserMyRepos.ps1
+    .\Sync-GitHubUserRepos.ps1
     # Run without parameters - displays help, examples, and author info
 .EXAMPLE
-    .\git-DownloadUserMyRepos.ps1 -UserName "roman.pindela@gmail.com" -CreatedBefore "2023"
+    .\Sync-GitHubUserRepos.ps1 -UserName "roman.pindela@gmail.com" -CreatedBefore "2023"
     # Clones only repositories created in or before 2023
 .EXAMPLE
-    .\git-DownloadUserMyRepos.ps1 -UserName "roman.pindela@gmail.com" -CreatedBefore "2024-05" -UpdatedBefore "2024-05"
+    .\Sync-GitHubUserRepos.ps1 -UserName "roman.pindela@gmail.com" -CreatedBefore "2024-05" -UpdatedBefore "2024-05"
     # Filters by year and month for creation and update dates
 .EXAMPLE
-    .\git-DownloadUserMyRepos.ps1 -UserName "roman.pindela@gmail.com" -CreatedBefore "2023-12-31" -Update
+    .\Sync-GitHubUserRepos.ps1 -UserName "roman.pindela@gmail.com" -CreatedBefore "2023-12-31" -Update
     # Filters by exact date and updates existing outdated repositories
 .NOTES
     Author : Roman Pindela
@@ -162,7 +162,7 @@ $ErrorActionPreference = "Stop"
 
 # --- SCRIPT METADATA ---
 $SCRIPT_INFO = @{
-    Name        = "git-DownloadUserMyRepos"
+    Name        = "Sync-GitHubUserRepos"
     Version     = "1.2.0"
     Author      = "Roman Pindela"
     Contact     = "roman.pindela@gmail.com"
@@ -271,11 +271,11 @@ DESCRIPTION:
   - If outdated and -Update is omitted, notifies that an update is needed.
 
 USAGE:
-  .\git-DownloadUserMyRepos.ps1 -UserName <account|email> [-DestinationPath <dir>]
+  .\Sync-GitHubUserRepos.ps1 -UserName <account|email> [-DestinationPath <dir>]
                                 [-GitHubToken <secure-token>] [-CloneProtocol <HTTPS|SSH>]
                                 [-Update] [-CreatedBefore <date>] [-UpdatedBefore <date>]
                                 [-IncludeForks:<`$true|`$false>] [-LogDirectory <dir>]
-  .\git-DownloadUserMyRepos.ps1 -h | -Help
+  .\Sync-GitHubUserRepos.ps1 -h | -Help
 
 PARAMETERS:
   -UserName, -User, -Email   : GitHub username or email address (e.g. roman.pindela@gmail.com).
@@ -300,25 +300,25 @@ PARAMETERS:
 
 EXAMPLES:
   1) Display help and usage examples:
-     .\git-DownloadUserMyRepos.ps1
-     .\git-DownloadUserMyRepos.ps1 -Help
-     .\git-DownloadUserMyRepos.ps1 -h
+     .\Sync-GitHubUserRepos.ps1
+     .\Sync-GitHubUserRepos.ps1 -Help
+     .\Sync-GitHubUserRepos.ps1 -h
 
   2) Verify and clone repositories by email address:
-     .\git-DownloadUserMyRepos.ps1 -UserName "roman.pindela@gmail.com"
+     .\Sync-GitHubUserRepos.ps1 -UserName "roman.pindela@gmail.com"
 
   3) Download only repositories created before or in year 2023:
-     .\git-DownloadUserMyRepos.ps1 -UserName "roman.pindela@gmail.com" -CreatedBefore "2023"
+     .\Sync-GitHubUserRepos.ps1 -UserName "roman.pindela@gmail.com" -CreatedBefore "2023"
 
   4) Filter by month and year (created before May 2023 and updated before June 2024):
-     .\git-DownloadUserMyRepos.ps1 -UserName "roman.pindela@gmail.com" -CreatedBefore "2023-05" -UpdatedBefore "2024-06"
+     .\Sync-GitHubUserRepos.ps1 -UserName "roman.pindela@gmail.com" -CreatedBefore "2023-05" -UpdatedBefore "2024-06"
 
   5) Filter by full date and update existing outdated repositories:
-     .\git-DownloadUserMyRepos.ps1 -UserName "roman.pindela@gmail.com" -CreatedBefore "2023-12-31" -Update
+     .\Sync-GitHubUserRepos.ps1 -UserName "roman.pindela@gmail.com" -CreatedBefore "2023-12-31" -Update
 
   6) Clone private and public repositories using a GitHub PAT:
      `$token = Read-Host "Enter GitHub PAT" -AsSecureString
-     .\git-DownloadUserMyRepos.ps1 -UserName "roman.pindela@gmail.com" -GitHubToken `$token -Update
+     .\Sync-GitHubUserRepos.ps1 -UserName "roman.pindela@gmail.com" -GitHubToken `$token -Update
 ================================================================================
 "@ -ForegroundColor Cyan
 }
@@ -343,7 +343,7 @@ if (-not (Test-Path -Path $LogDirectory)) {
 $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $compName = if ($env:COMPUTERNAME) { $env:COMPUTERNAME } else { "LOCALHOST" }
 $usrName = if ($env:USERNAME) { $env:USERNAME } else { "USER" }
-$logFileName = "$timestamp-git-DownloadUserMyRepos-$compName-$usrName.log"
+$logFileName = "$timestamp-Sync-GitHubUserRepos-$compName-$usrName.log"
 $script:LogFilePath = Join-Path -Path $LogDirectory -ChildPath $logFileName
 
 function Write-LogMessage {
@@ -429,7 +429,7 @@ $resolvedDestination = (Resolve-Path -Path $DestinationPath).Path
 # --- 3. GITHUB API HEADERS PREPARATION ---
 $headers = @{
     "Accept"     = "application/vnd.github.v3+json"
-    "User-Agent" = "PowerShell-git-DownloadUserMyRepos"
+    "User-Agent" = "PowerShell-Sync-GitHubUserRepos"
 }
 
 $tokenPlain = $null
@@ -455,7 +455,7 @@ if ($UserName.Contains("@") -and $GitHubToken -eq $null) {
         # 1. First attempt: search commits by author-email (returns exact GitHub user login)
         $commitHeaders = @{
             "Accept"     = "application/vnd.github.cloak-preview+json, application/vnd.github.v3+json"
-            "User-Agent" = "PowerShell-git-DownloadUserMyRepos"
+            "User-Agent" = "PowerShell-Sync-GitHubUserRepos"
         }
         $commitSearchUri = "https://api.github.com/search/commits?q=author-email:$encodedEmail"
         $commitRes = Invoke-RestMethod -Uri $commitSearchUri -Headers $commitHeaders -Method Get -ErrorAction SilentlyContinue
