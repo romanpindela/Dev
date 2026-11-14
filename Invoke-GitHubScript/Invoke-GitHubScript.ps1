@@ -12,14 +12,15 @@
 .PARAMETER HelpMe
     Displays the custom help menu and usage examples.
 .EXAMPLE
-    .\invoke-github-script.ps1 -ScriptUrl "https://raw.githubusercontent.com/romanpindela/Windows-Desktop/main/enable-remote-management/enable-remote-management.ps1"
+    .\Invoke-GitHubScript.ps1 -ScriptUrl "https://raw.githubusercontent.com/romanpindela/Windows-Desktop/main/Enable-RemoteManagement/Enable-RemoteManagement.ps1"
 .EXAMPLE
-    .\invoke-github-script.ps1 -HelpMe
+    .\Invoke-GitHubScript.ps1 -HelpMe
 .NOTES
     Author: Roman Pindela
     Email: roman.pindela@gmail.com
     GitHub: https://github.com/romanpindela
     Version: 1.2.0
+    License: MIT
 #>
 
 [CmdletBinding()]
@@ -40,7 +41,7 @@ param (
 function Show-ExtendedHelp {
     Clear-Host
     Write-Host "=====================================================================" -ForegroundColor Cyan
-    Write-Host " PowerShell Script Downloader & Runner v1.2.0" -ForegroundColor Cyan
+    Write-Host " Invoke-GitHubScript - PowerShell Script Downloader & Runner v1.2.0" -ForegroundColor Cyan
     Write-Host "=====================================================================" -ForegroundColor Cyan
     Write-Host "Author:  Roman Pindela"
     Write-Host "Email:   roman.pindela@gmail.com"
@@ -53,10 +54,10 @@ function Show-ExtendedHelp {
     Write-Host "---------------------------------------------------------------------"
     Write-Host "Usage Examples:"
     Write-Host "  1) Run with default target (Downloads folder):" -ForegroundColor Yellow
-    Write-Host "     .\invoke-github-script.ps1 -ScriptUrl 'https://raw.githubusercontent.com/...'"
+    Write-Host "     .\Invoke-GitHubScript.ps1 -ScriptUrl 'https://raw.githubusercontent.com/...'"
     Write-Host ""
     Write-Host "  2) Run and save to a custom location:" -ForegroundColor Yellow
-    Write-Host "     .\invoke-github-script.ps1 -ScriptUrl 'URL' -OutputPath 'C:\Tools\script.ps1'"
+    Write-Host "     .\Invoke-GitHubScript.ps1 -ScriptUrl 'URL' -OutputPath 'C:\Tools\script.ps1'"
     Write-Host "=====================================================================" -ForegroundColor Cyan
 }
 
