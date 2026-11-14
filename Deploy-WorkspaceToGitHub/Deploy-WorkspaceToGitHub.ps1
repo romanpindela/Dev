@@ -15,16 +15,17 @@
 .PARAMETER Help
     Displays the technical manual, operational examples, code version, and owner profiles.
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File .\deploy-workspace-to-github.ps1 -Path "C:\GitHub\Dev\MyScripts"
+    powershell -ExecutionPolicy Bypass -File .\Deploy-WorkspaceToGitHub.ps1 -Path "C:\GitHub\Dev\MyScripts"
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File .\deploy-workspace-to-github.ps1 -Path "C:\GitHub\Dev\SecretScripts" -Visibility "private"
+    powershell -ExecutionPolicy Bypass -File .\Deploy-WorkspaceToGitHub.ps1 -Path "C:\GitHub\Dev\SecretScripts" -Visibility "private"
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File .\deploy-workspace-to-github.ps1 -Help
+    powershell -ExecutionPolicy Bypass -File .\Deploy-WorkspaceToGitHub.ps1 -Help
 .NOTES
     Author: Roman Pindela
     Email: roman.pindela@gmail.com
     GitHub: https://github.com/romanpindela
     Version: 1.2.1
+    License: MIT
 #>
 
 param (
@@ -57,13 +58,13 @@ function Show-ScriptHelp {
     Write-Host ""
     Write-Host "USAGE OPTIONS:"
     Write-Host "  Deploy local repository with default configuration (Public):"
-    Write-Host "  powershell -ExecutionPolicy Bypass -File .\deploy-workspace-to-github.ps1 -Path 'C:\MyScripts'"
+    Write-Host "  powershell -ExecutionPolicy Bypass -File .\Deploy-WorkspaceToGitHub.ps1 -Path 'C:\MyScripts'"
     Write-Host ""
     Write-Host "  Deploy local repository with explicit parameters (Private Override):"
-    Write-Host "  powershell -ExecutionPolicy Bypass -File .\deploy-workspace-to-github.ps1 -Path 'C:\MyScripts' -Visibility 'private'"
+    Write-Host "  powershell -ExecutionPolicy Bypass -File .\Deploy-WorkspaceToGitHub.ps1 -Path 'C:\MyScripts' -Visibility 'private'"
     Write-Host ""
     Write-Host "  Display this operational manual:"
-    Write-Host "  powershell -ExecutionPolicy Bypass -File .\deploy-workspace-to-github.ps1 -Help"
+    Write-Host "  powershell -ExecutionPolicy Bypass -File .\Deploy-WorkspaceToGitHub.ps1 -Help"
     Write-Host "=====================================================================" -ForegroundColor Cyan
 }
 
