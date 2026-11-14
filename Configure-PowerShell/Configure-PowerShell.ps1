@@ -2,24 +2,30 @@
 .SYNOPSIS
     Automates the configuration of the PowerShell user profile with sane defaults.
 .DESCRIPTION
-    This script initializes the user's PowerShell profile, creates a default
-    development workspace directory, and injects quality-of-life improvements
-    such as persistent history, autocomplete from history, and a default startup location.
+    This script initializes the user's PowerShell profile across Windows PowerShell 5.1
+    and PowerShell 7+, creates a default development workspace directory, and injects
+    quality-of-life improvements such as persistent history, autocomplete from history,
+    and a default startup location.
 .PARAMETER DefaultFolder
-    The absolute path to the desired default startup directory. Defaults to 'C:\Developer'.
+    The absolute path to the desired default startup directory. Defaults to 'C:\GitHub\'.
 .PARAMETER Help
     Displays the technical manual and operational examples.
+.PARAMETER ResetProfile
+    Clears existing content from detected PowerShell profiles before applying the new configuration.
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File .\configure-powershell.ps1
+    powershell -ExecutionPolicy Bypass -File .\Configure-PowerShell.ps1
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File .\configure-powershell.ps1 -DefaultFolder "C:\MyWorkspace"
+    powershell -ExecutionPolicy Bypass -File .\Configure-PowerShell.ps1 -DefaultFolder "C:\MyWorkspace"
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File .\configure-powershell.ps1 -Help
+    powershell -ExecutionPolicy Bypass -File .\Configure-PowerShell.ps1 -ResetProfile
+.EXAMPLE
+    powershell -ExecutionPolicy Bypass -File .\Configure-PowerShell.ps1 -Help
 .NOTES
     Author: Roman Pindela
     Email: roman.pindela@gmail.com
     GitHub: https://github.com/romanpindela
     Version: 1.1.0
+    License: MIT
 #>
 
 param (
@@ -49,16 +55,16 @@ function Show-ScriptHelp {
     Write-Host ""
     Write-Host "USAGE OPTIONS:"
     Write-Host "  Execute standard automated configuration (defaults to C:\GitHub\):"
-    Write-Host "  powershell -ExecutionPolicy Bypass -File .\configure-powershell.ps1"
+    Write-Host "  powershell -ExecutionPolicy Bypass -File .\Configure-PowerShell.ps1"
     Write-Host ""
     Write-Host "  Execute configuration with a custom startup directory:"
-    Write-Host "  powershell -ExecutionPolicy Bypass -File .\configure-powershell.ps1 -DefaultFolder 'C:\Workspace'"
+    Write-Host "  powershell -ExecutionPolicy Bypass -File .\Configure-PowerShell.ps1 -DefaultFolder 'C:\Workspace'"
     Write-Host ""
     Write-Host "  Reset existing profile and apply fresh configuration:"
-    Write-Host "  powershell -ExecutionPolicy Bypass -File .\configure-powershell.ps1 -ResetProfile"
+    Write-Host "  powershell -ExecutionPolicy Bypass -File .\Configure-PowerShell.ps1 -ResetProfile"
     Write-Host ""
     Write-Host "  Display this operational help manual:"
-    Write-Host "  powershell -ExecutionPolicy Bypass -File .\configure-powershell.ps1 -Help"
+    Write-Host "  powershell -ExecutionPolicy Bypass -File .\Configure-PowerShell.ps1 -Help"
     Write-Host "=====================================================================" -ForegroundColor Cyan
 }
 
