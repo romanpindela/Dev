@@ -1,3 +1,13 @@
+"""Add-RunScreenshotsToReadme.py - Automated CLI execution screenshot generator for README files.
+
+Executes a target PowerShell (.ps1), executable (.exe), or Python (.py) script in a
+maximized Windows console window for both a standard run and a -Help run, captures
+the console output screenshots into an `assets/` directory, and appends an
+`Execution View` section to the target script's `readme.md` if not already present.
+
+Author: Roman Pindela
+"""
+
 import os
 import sys
 import subprocess
@@ -83,9 +93,13 @@ def run_process_and_capture(script_path, arguments, output_filename):
             pass
 
 def main():
-    parser = argparse.ArgumentParser(description="Professional README screenshot generator.")
-    parser.add_argument("-s", "--script", type=str, required=True, help="Path to the .ps1, .exe or .py file")
-    parser.add_argument("-args", "--arguments", type=str, default="", help="Standard execution arguments")
+    """Parse CLI arguments, capture standard and -Help screenshots, and update readme.md."""
+    parser = argparse.ArgumentParser(
+        prog="Add-RunScreenshotsToReadme.py",
+        description="Execute a .ps1, .exe, or .py script, capture standard and -Help screenshots, and embed them in readme.md.",
+    )
+    parser.add_argument("-s", "--script", type=str, required=True, help="Path to the .ps1, .exe, or .py file")
+    parser.add_argument("-args", "--arguments", type=str, default="", help="Standard execution arguments to pass to the target script")
     parsed_args = parser.parse_args()
 
     script_path = os.path.abspath(parsed_args.script)
