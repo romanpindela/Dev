@@ -1,44 +1,68 @@
-# Clone-GitHubRepositories – Documentation & Usage Guide
+# Clone-GitHubRepositories
 
-**Author:** Roman Pindela  
-**GitHub:** [https://github.com/romanpindela](https://github.com/romanpindela)  
-**Email:** romanpindela@gmail.com  
-**Version:** 1.1.0  
+## Problem Statement
 
----
+Manually cloning and keeping a curated set of GitHub repositories synchronized across a new or existing development workstation one by one is repetitive and error-prone. Developers need a repeatable, configuration-driven script that reads repository names from a text file and ensures every project is present and fast-forwarded locally.
 
-## 1. Tool Purpose
-The `Clone-GitHubRepositories.ps1` script automates downloading and updating a designated set of GitHub repositories to a local working directory. It is designed for development and administrative environments leveraging **Visual Studio Code**.
+## Overview
 
-Key Features:
-- **No Hardcoded Repositories** – The list of projects is dynamically loaded from an external text file.
-- **Idempotence** – If a repository does not exist locally, the script executes `git clone`; if it already exists, it synchronizes the branch using a safe `git pull --ff-only`.
-- **Built-in Help** – Running without arguments or with `-Help` / `-h` displays complete syntax, parameters, and author information.
-- **Protocol Flexibility** – Supports both **HTTPS** and **SSH** cloning protocols.
+`Clone-GitHubRepositories.ps1` reads repository names from an external text file (`repositoriesToClone.txt`, ignoring blank lines and `#` comments) and clones missing repositories into `-TargetDir` via HTTPS or SSH. For repositories that already exist locally with a `.git` folder, it safely pulls upstream changes using `git pull --ff-only`.
 
----
+## Environment & Prerequisites
 
-## 2. System Requirements
-1. Windows 10 / Windows 11 or Windows Server.
-2. PowerShell 5.1 or PowerShell 7+.
-3. [Git for Windows](https://git-scm.com/) installed and accessible in the system PATH.
-4. Visual Studio Code for subsequent codebase work.
+- **OS:** Windows 10, Windows 11, or Windows Server
+- **PowerShell:** Windows PowerShell 5.1 or PowerShell 7+
+- **Dependencies:** [Git for Windows](https://git-scm.com/) (`git` available in `$env:PATH`); configured Git credentials or SSH keys for private/SSH repositories
+- **Optional:** Visual Studio Code (`code`) for opening the cloned workspace
 
----
+## Permissions Required
 
-## 3. Directory Structure
+**User** — Operates purely within the user-specified `-TargetDir` using standard `git` commands; no Administrator privileges are required.
 
-```text
-working_directory/
-│
-├── Clone-GitHubRepositories.ps1    # Main PowerShell script
-└── repositoriesToClone.txt         # Repository name list (one per line)
+## Safety & Impact
+
+- **Risk Level:** `Modifies local files & Git repositories` — Creates `-TargetDir` if it does not exist, clones new repositories into subdirectories, and runs `git pull --ff-only` on existing local repositories (preventing accidental merge commits).
+- **WhatIf / Confirm & Backup:** Does not support `-WhatIf` / `-Confirm` and creates no backups or disk log files.
+
+## Usage Examples
+
+```powershell
+# Display built-in help (empty run or -h / -help)
+.\Clone-GitHubRepositories.ps1
+.\Clone-GitHubRepositories.ps1 -help
+
+# Display PowerShell Comment-Based Help
+Get-Help .\Clone-GitHubRepositories.ps1 -Full
+
+# Clone or update repositories using HTTPS (default)
+.\Clone-GitHubRepositories.ps1 -RepositoriesFile ".\repositoriesToClone.txt" -TargetDir "C:\GitHub"
+
+# Clone or update repositories using SSH
+.\Clone-GitHubRepositories.ps1 -RepositoriesFile ".\repositoriesToClone.txt" -TargetDir "C:\GitHub" -AuthProtocol SSH
+
+# Positional arguments
+.\Clone-GitHubRepositories.ps1 ".\repositoriesToClone.txt" "C:\GitHub"
 ```
 
----
+### Script Parameters
 
-## 4. Repository List Configuration (`repositoriesToClone.txt`)
-Place raw repository names in the file. Blank lines and lines starting with `#` are automatically ignored.
+| Parameter | Type / Value | Required | Default | Description |
+| :--- | :--- | :---: | :--- | :--- |
+| `-RepositoriesFile` | `[string]` | Yes | *None* | Path to the text file containing repository names (e.g., `.\repositoriesToClone.txt`). |
+| `-TargetDir` | `[string]` | Yes | *None* | Target folder where repositories will be cloned (e.g., `C:\GitHub`). |
+| `-Username` | `[string]` | No | `romanpindela` | GitHub username or organization owning the repositories. |
+| `-AuthProtocol` | `HTTPS` \| `SSH` | No | `HTTPS` | Transport protocol used for cloning. |
+
+### Directory Structure & Configuration (`repositoriesToClone.txt`)
+
+```text
+Clone-GitHubRepositories/
+├── Clone-GitHubRepositories.ps1    # Main PowerShell script
+├── repositoriesToClone.txt         # Repository name list (one per line)
+└── README.md                       # Documentation
+```
+
+Place one repository name per line in `repositoriesToClone.txt`; blank lines and `#` comments are ignored:
 
 ```text
 Automation
@@ -50,48 +74,18 @@ Dev
 Forensic
 ```
 
----
-
-## 5. Script Parameters
-
-| Parameter | Type / Value | Description |
-| :--- | :--- | :--- |
-| `-RepositoriesFile` | String (Path) | Path to the text file containing repository names (e.g., `.\repositoriesToClone.txt`). |
-| `-TargetDir` | String (Path) | Target folder where repositories will be cloned (e.g., `C:\GitHub`). |
-| `-Username` | String | GitHub username (default: `romanpindela`). |
-| `-AuthProtocol` | `HTTPS` \| `SSH` | Cloning protocol selection (default: `HTTPS`). |
-| `-Help` / `-h` | Switch | Displays built-in help and author information, then exits. |
-
----
-
-## 6. Usage Examples
-
-### Display Help:
-```powershell
-powershell .\Clone-GitHubRepositories.ps1 -Help
-```
-
-### Standard Cloning via HTTPS:
-```powershell
-powershell .\Clone-GitHubRepositories.ps1 -RepositoriesFile ".\repositoriesToClone.txt" -TargetDir "C:\GitHub"
-```
-
-### Cloning via SSH:
-```powershell
-powershell .\Clone-GitHubRepositories.ps1 -RepositoriesFile ".\repositoriesToClone.txt" -TargetDir "C:\GitHub" -AuthProtocol SSH
-```
-
----
-
-## 7. Working with Visual Studio Code
-After cloning repositories into the destination directory, open the entire workspace directly from the command line:
+### Working with Visual Studio Code
 
 ```powershell
 code C:\GitHub
-```
-
-Or open a single target repository:
-
-```powershell
+# Or open a single repository:
 code C:\GitHub\Windows-Desktop
 ```
+
+## Author
+
+- **Roman Pindela**
+- **Email:** [roman.pindela@gmail.com](mailto:roman.pindela@gmail.com)
+- **GitHub:** [https://github.com/romanpindela](https://github.com/romanpindela)
+- **Version:** `1.1.0`
+- **License:** MIT

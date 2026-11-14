@@ -1,3 +1,36 @@
+﻿<#
+.SYNOPSIS
+    Clones or updates a list of GitHub repositories from an external text file.
+.DESCRIPTION
+    Reads repository names from a plain-text configuration file (ignoring blank lines
+    and comments starting with '#'), clones missing repositories into the target
+    working directory using HTTPS or SSH, and safely updates existing local repositories
+    via 'git pull --ff-only'.
+.PARAMETER RepositoriesFile
+    Path to the text file containing repository names, one per line (e.g., repositoriesToClone.txt).
+.PARAMETER TargetDir
+    Destination directory where repositories will be cloned or updated (e.g., C:\GitHub).
+.PARAMETER Username
+    GitHub username or organization owning the repositories. Defaults to 'romanpindela'.
+.PARAMETER AuthProtocol
+    Transport protocol used for cloning: 'HTTPS' (default) or 'SSH'.
+.EXAMPLE
+    .\Clone-GitHubRepositories.ps1 -RepositoriesFile .\repositoriesToClone.txt -TargetDir C:\GitHub
+    Clones or updates all listed repositories using HTTPS.
+.EXAMPLE
+    .\Clone-GitHubRepositories.ps1 -RepositoriesFile .\repositoriesToClone.txt -TargetDir C:\GitHub -AuthProtocol SSH
+    Clones or updates all listed repositories using SSH.
+.EXAMPLE
+    .\Clone-GitHubRepositories.ps1 .\repositoriesToClone.txt C:\GitHub
+    Uses positional parameters for RepositoriesFile and TargetDir.
+.NOTES
+    Author: Roman Pindela
+    Email: roman.pindela@gmail.com
+    GitHub: https://github.com/romanpindela
+    Version: 1.1.0
+    License: MIT
+#>
+
 param(
     [string]$RepositoriesFile,
     [string]$TargetDir,
@@ -8,7 +41,7 @@ param(
 $SCRIPT_VERSION = "1.1.0"
 $AUTHOR_NAME    = "Roman Pindela"
 $AUTHOR_GITHUB  = "https://github.com/romanpindela"
-$AUTHOR_EMAIL   = "romanpindela@gmail.com"
+$AUTHOR_EMAIL   = "roman.pindela@gmail.com"
 
 # Check if called with -h, -help, /?, ? or without required parameters
 $showHelp = $false
