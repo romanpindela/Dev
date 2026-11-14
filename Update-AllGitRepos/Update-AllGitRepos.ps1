@@ -1,6 +1,6 @@
 <#
 ================================================================================
-  Script Name : git-AllReposUpdate.ps1
+  Script Name : Update-AllGitRepos.ps1
   Author      : Roman Pindela
   Contact     : roman.pindela@gmail.com
   Version     : 1.0.0
@@ -42,19 +42,19 @@
 .PARAMETER Help
     Displays detailed help menu, version, contact information, and examples.
 .EXAMPLE
-    .\git-AllReposUpdate.ps1
+    .\Update-AllGitRepos.ps1
     # Run without parameters - displays help, examples, and author info
 .EXAMPLE
-    .\git-AllReposUpdate.ps1 -Update
+    .\Update-AllGitRepos.ps1 -Update
     # Updates all repositories in default directory C:\GitHub
 .EXAMPLE
-    .\git-AllReposUpdate.ps1 -Path "C:\GitHub"
+    .\Update-AllGitRepos.ps1 -Path "C:\GitHub"
     # Updates repositories in the specified directory
 .EXAMPLE
-    .\git-AllReposUpdate.ps1 -Update -Prune
+    .\Update-AllGitRepos.ps1 -Update -Prune
     # Updates repositories and prunes deleted remote references
 .EXAMPLE
-    .\git-AllReposUpdate.ps1 -Update -LogPath "C:\Logs\git-update-report.txt"
+    .\Update-AllGitRepos.ps1 -Update -LogPath "C:\Logs\git-update-report.txt"
     # Updates repositories and writes report to the specified log file
 .NOTES
     Author: Roman Pindela
@@ -94,7 +94,7 @@ $ErrorActionPreference = "Stop";
 
 # --- SCRIPT INFORMATION AND METADATA ---
 $SCRIPT_INFO = @{
-    Name        = "git-AllReposUpdate";
+    Name        = "Update-AllGitRepos";
     Version     = "1.0.0";
     Author      = "Roman Pindela";
     Contact     = "roman.pindela@gmail.com";
@@ -144,9 +144,9 @@ DESCRIPTION:
   and a comprehensive post-execution summary.
 
 USAGE:
-  .\git-AllReposUpdate.ps1 -Update [-Path <directory>] [-Prune] [-LogPath <file.txt>]
-  .\git-AllReposUpdate.ps1 -Path <directory> [-Prune] [-LogPath <file.txt>]
-  .\git-AllReposUpdate.ps1 -h | -Help
+  .\Update-AllGitRepos.ps1 -Update [-Path <directory>] [-Prune] [-LogPath <file.txt>]
+  .\Update-AllGitRepos.ps1 -Path <directory> [-Prune] [-LogPath <file.txt>]
+  .\Update-AllGitRepos.ps1 -h | -Help
 
 PARAMETERS:
   -Update, -u, -Run, -All : Initiates automated repository update.
@@ -158,20 +158,20 @@ PARAMETERS:
 
 EXAMPLES:
   1) Display help menu:
-     .\git-AllReposUpdate.ps1
-     .\git-AllReposUpdate.ps1 -Help
+     .\Update-AllGitRepos.ps1
+     .\Update-AllGitRepos.ps1 -Help
 
   2) Update all repositories in default C:\GitHub:
-     .\git-AllReposUpdate.ps1 -Update
+     .\Update-AllGitRepos.ps1 -Update
 
   3) Update with custom path:
-     .\git-AllReposUpdate.ps1 -Path "C:\Projects\GitHub"
+     .\Update-AllGitRepos.ps1 -Path "C:\Projects\GitHub"
 
   4) Update with branch pruning:
-     .\git-AllReposUpdate.ps1 -Update -Prune
+     .\Update-AllGitRepos.ps1 -Update -Prune
 
   5) Update and save log to a dedicated file:
-     .\git-AllReposUpdate.ps1 -Update -LogPath "C:\Logs\git_sync.txt"
+     .\Update-AllGitRepos.ps1 -Update -LogPath "C:\Logs\git_sync.txt"
 ================================================================================
 "@ -ForegroundColor Cyan;
 }
