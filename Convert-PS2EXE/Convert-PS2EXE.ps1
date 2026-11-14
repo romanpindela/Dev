@@ -7,15 +7,18 @@
     and outputs the .exe file in the same directory as the source script by default.
 .PARAMETER ScriptPath
     The absolute or relative path to the source PowerShell script (.ps1) that you want to convert.
+.PARAMETER Help
+    Displays the script usage guide, requirements, and author information.
 .EXAMPLE
-    .\convert-ps2exe.ps1 -ScriptPath "C:\Scripts\MyScript.ps1"
+    .\Convert-PS2EXE.ps1 -ScriptPath "C:\Scripts\MyScript.ps1"
 .EXAMPLE
-    .\convert-ps2exe.ps1 -h
+    .\Convert-PS2EXE.ps1 -h
 .NOTES
     Author: Roman Pindela
     Email: roman.pindela@gmail.com
     GitHub: https://github.com/romanpindela
     Version: 1.2.0
+    License: MIT
 #>
 
 [CmdletBinding(DefaultParameterSetName = "Default")]
@@ -40,15 +43,15 @@ param (
 # --- 1. Help & Usage Trigger ---
 if ($Help -or ([string]::IsNullOrWhiteSpace($ScriptPath) -and $PSCmdlet.ParameterSetName -eq "Default")) {
     Write-Host "=========================================================================" -ForegroundColor Cyan
-    Write-Host " PowerShell Script to EXE Converter v1.2.0" -ForegroundColor Cyan
+    Write-Host " PowerShell Script to EXE Converter (Convert-PS2EXE) v1.2.0" -ForegroundColor Cyan
     Write-Host " Author: Roman Pindela (roman.pindela@gmail.com)" -ForegroundColor Cyan
     Write-Host " GitHub: https://github.com/romanpindela" -ForegroundColor Cyan
     Write-Host "=========================================================================" -ForegroundColor Cyan
     Write-Host "`nDescription:"
     Write-Host "  Converts any .ps1 script into an executable .exe file using the ps2exe module."
     Write-Host "`nUsage:" -ForegroundColor Yellow
-    Write-Host "  .\convert-ps2exe.ps1 -ScriptPath 'C:\Path\To\YourScript.ps1'" -ForegroundColor White
-    Write-Host "  .\convert-ps2exe.ps1 -Help" -ForegroundColor White
+    Write-Host "  .\Convert-PS2EXE.ps1 -ScriptPath 'C:\Path\To\YourScript.ps1'" -ForegroundColor White
+    Write-Host "  .\Convert-PS2EXE.ps1 -Help" -ForegroundColor White
     Write-Host "`nRequirements:"
     Write-Host "  - Local Administrator privileges (the script will auto-elevate if needed)."
     Write-Host "  - Internet connection (for the initial 'ps2exe' module installation)."
