@@ -6,103 +6,75 @@
 [![PowerShell: 5.1+|7+](https://img.shields.io/badge/PowerShell-5.1%2B%20%7C%207%2B-blue.svg)]()
 [![Git: 2.34+](https://img.shields.io/badge/Git-2.34%2B-orange.svg)]()
 
-A production-grade, enterprise-ready PowerShell automation engine that provisions and configures cryptographic **SSH commit and tag signing** for Git and GitHub. Eliminates the complexity of traditional GPG/PGP key management while achieving verified commit authenticity badges on GitHub.
+## Problem Statement
 
----
+Cryptographically signing Git commits and tags with traditional GPG/PGP toolchains requires installing external suites (such as GnuPG/Gpg4win), managing key expirations, and troubleshooting pinentry dialogs. While Git 2.34+ supports native OpenSSH commit signing, manually generating signing keys, configuring Git global settings, populating `allowed_signers`, starting `ssh-agent`, and registering signing keys on GitHub is multi-step and error-prone.
 
-## 📌 Metadata & Author Information
+## Overview
 
-* **Author:** Roman Pindela
-* **Email:** [roman.pindela@gmail.com](mailto:roman.pindela@gmail.com)
-* **GitHub:** [https://github.com/romanpindela](https://github.com/romanpindela)
-* **Repository:** [https://github.com/romanpindela/Dev](https://github.com/romanpindela/Dev)
-* **Version:** `1.0.0`
-* **Release Date:** October 2026
-* **License:** MIT
+`Enable-GitCommitSigning.ps1` automates end-to-end SSH commit and tag signing on Windows. It generates or reuses an Ed25519/RSA SSH keypair, configures global Git signing variables (`gpg.format = ssh`, `user.signingkey`, `commit.gpgsign`, `tag.gpgSign`, `gpg.ssh.allowedSignersFile`), maintains `~/.ssh/allowed_signers`, optionally enables `ssh-agent`, registers the signing key on GitHub via `gh` CLI or browser/clipboard fallback, runs a local signature sandbox test, and includes a `-Push` pipeline with `Write-Progress` bars.
 
----
-
-## 📋 Table of Contents
-
-1. [Tool Purpose & Architecture](#1-tool-purpose--architecture)
-2. [Key Features](#2-key-features)
-3. [System Requirements](#3-system-requirements)
-4. [Directory Structure](#4-directory-structure)
-5. [Parameter Reference](#5-parameter-reference)
-6. [Usage Examples](#6-usage-examples)
-7. [GitHub Key Registration Modes](#7-github-key-registration-modes)
-   - [Automated Registration (GitHub CLI)](#automated-registration-github-cli)
-   - [Semi-Automated Registration (Web Portal + Clipboard)](#semi-automated-registration-web-portal--clipboard)
-8. [Local Signature Verification (allowed_signers)](#8-local-signature-verification-allowedsigners)
-9. [File Shipping Pipeline with Progress Bar (-Push)](#9-file-shipping-pipeline-with-progress-bar--push)
-10. [Event Logging](#10-event-logging)
-11. [Troubleshooting & FAQ](#11-troubleshooting--faq)
-12. [Security & Script Unblocking](#12-security--script-unblocking)
-13. [Screenshots & Visual Walkthrough](#13-screenshots--visual-walkthrough)
-
----
-
-## 1. Tool Purpose & Architecture
-
-Historically, cryptographically signing Git commits required installing external GPG toolchains (such as GnuPG / Gpg4win), generating complex keyring architectures, dealing with expired key expirations, and configuring custom pinentry dialogs.
-
-Starting with **Git 2.34**, Git natively supports signing commits and tags directly with standard **SSH keys** (`gpg.format = ssh`). GitHub natively validates SSH signatures and awards the green **Verified** badge next to signed commits.
-
-`Enable-GitCommitSigning.ps1` completely automates this setup on Windows:
-1. **Generates or Detects SSH Keys:** Provisions high-security RFC 8032 Ed25519 (or 4096-bit RSA) keys dedicated for commit signing.
-2. **Configures Global Git Variables:** Sets `gpg.format = ssh`, `user.signingkey`, `commit.gpgsign = true`, `tag.gpgSign = true`, and links `gpg.ssh.allowedSignersFile`.
-3. **Builds Local Verification Database:** Maintains `~/.ssh/allowed_signers` so `git log --show-signature` verifies commits locally on your workstation.
-4. **Manages OpenSSH Authentication Agent:** Detects, configures, and starts the Windows `ssh-agent` service, caching keys for friction-free signing.
-5. **Registers Signing Key on GitHub:** Provides both fully automated registration via GitHub CLI (`gh ssh-key add ... --type signing`) and a guided semi-automated web portal workflow with automated clipboard copying.
-6. **Validates Cryptographic Signatures:** Runs an isolated sandbox commit test verifying that signatures produce `Good "git" signature` output.
-7. **Monitors Push Activity:** Features a built-in file shipping pipeline that stages, signs, and pushes code with real-time progress bars (`Write-Progress`).
-
----
-
-## 2. Key Features
-
-- 🛡️ **Empty-Run Safeguard:** Executing the script without arguments displays the complete interactive help manual, parameter definitions, version info, and usage examples without modifying system settings.
-- 🔑 **Ed25519 Elliptic-Curve Cryptography:** Uses fast, modern, and compact Ed25519 keys by default, with optional support for 4096-bit RSA.
-- 🤖 **Automated GitHub CLI Registration:** Uses `gh ssh-key add --type signing` to register the public key directly into the user's GitHub profile.
-- 🌐 **Semi-Automated Browser Fallback:** Seamlessly copies the public key to the Windows Clipboard (`Set-Clipboard` / `clip.exe`), opens `https://github.com/settings/keys`, and provides terminal instructions if CLI permissions are unavailable.
-- 📋 **Local Signature Verification (`allowed_signers`):** Automatically populates `~/.ssh/allowed_signers` to enable local cryptographic auditing via `git log --show-signature`.
-- 📊 **Dynamic Real-Time Progress Bars:** Leverages PowerShell native `Write-Progress` for 7-stage configuration tracking and 5-phase file shipping.
-- 📑 **Structured Multi-Target Event Logging:** Logs all execution steps with millisecond timestamps to both console and a persistent UTF-8 log file (`$HOME\.git-commit-signing\logs\`).
-- 🔐 **Language-Independent SID Elevation:** Evaluates Administrator privileges using well-known Windows SIDs (`[Security.Principal.WellKnownSidType]::BuiltInAdministratorsSid`), ensuring 100% compatibility across English and Polish Windows editions.
-
----
-
-## 3. System Requirements
+## Environment & Prerequisites
 
 | Component | Minimum Requirement | Notes |
 | :--- | :--- | :--- |
 | **Operating System** | Windows 10 (1809+), Windows 11, Windows Server 2016+ | x64 / ARM64 architectures supported |
 | **PowerShell** | Windows PowerShell 5.1 or PowerShell 7+ | Execution policy `RemoteSigned` or `Bypass` |
 | **Git Engine** | [Git for Windows](https://git-scm.com/) **2.34.0+** | Required for native SSH signing support |
-| **OpenSSH** | OpenSSH for Windows (`ssh-keygen.exe`) | Included natively with Windows 10/11 |
-| **GitHub CLI** | [GitHub CLI](https://cli.github.com/) (`gh.exe`) | *Optional* for fully automated key registration |
+| **OpenSSH** | OpenSSH for Windows (`ssh-keygen.exe`, `ssh-add.exe`) | Included natively with Windows 10/11 |
+| **GitHub CLI** | [GitHub CLI](https://cli.github.com/) (`gh.exe`) | *Optional* for automated key registration (`-RegistrationMode Auto`) |
 
----
+## Permissions Required
 
-## 4. Directory Structure
+**User (Admin optional)** — Runs in standard user context for key generation, global `.gitconfig` updates, `allowed_signers` management, GitHub registration, sandbox commit testing, and `-Push`. **Administrator privileges are only required optionally** when using `-ConfigureAgent` on a system where the Windows `ssh-agent` service is disabled/stopped and needs its startup type set to `Automatic` (`Set-Service -Name ssh-agent -StartupType Automatic`).
 
-```text
-C:\Dane\rpindela\GitHub\Dev\
-│
-├── Enable-GitCommitSigning\
-│   ├── assets/
-│   │   ├── Standard_run.jpg                           # Empty-run help guide view
-│   │   ├── Adding_new_ssh_key_to_github_account.jpg   # GitHub SSH signing key registration dialog
-│   │   ├── Adding_new_ssh_key_to_github_account2.jpg  # GitHub SSH keys overview dashboard
-│   │   └── Success.jpg                                # Full execution and signature verification view
-│   ├── Enable-GitCommitSigning.ps1                    # Main production automation script
-│   └── README.md                                      # Comprehensive documentation (this file)
-└── README.md                                          # Dev repository index
+## Safety & Impact
+
+- **Risk Level:** `Modifies local configuration, SSH keys, and optionally remote GitHub state` — Generates SSH keys (`~/.ssh/id_ed25519_signing` by default if missing), modifies global Git configuration, appends to `~/.ssh/allowed_signers`, optionally registers a signing key on GitHub, and with `-Push` stages, signs, and pushes commits to `origin`.
+- **WhatIf / Confirm & Logs:** Does not support `-WhatIf` / `-Confirm` and creates no configuration backups. Running without parameters or with `-Help` executes safely without modifying state. Writes timestamped UTF-8 audit logs by default to `$HOME\.git-commit-signing\logs\` (unless `-NoLog` is specified).
+
+## Usage Examples
+
+### Example 1: Display Help & Usage Manual (Empty-Run)
+```powershell
+.\Enable-GitCommitSigning.ps1
+# Or explicitly:
+.\Enable-GitCommitSigning.ps1 -Help
+
+# PowerShell Comment-Based Help:
+Get-Help .\Enable-GitCommitSigning.ps1 -Full
+```
+
+### Example 2: Complete Automatic Setup (Recommended)
+Generates a dedicated `id_ed25519_signing` key, configures global Git variables, creates `allowed_signers`, registers the key via GitHub CLI (`gh`), and tests the signature:
+```powershell
+.\Enable-GitCommitSigning.ps1 -Enable
+```
+
+### Example 3: Use Existing SSH Key (`~/.ssh/id_ed25519`)
+```powershell
+.\Enable-GitCommitSigning.ps1 -Enable -UseExistingKey
+```
+
+### Example 4: Semi-Automated Web Portal Registration
+Copies the public key to the clipboard and opens `https://github.com/settings/keys` in your browser:
+```powershell
+.\Enable-GitCommitSigning.ps1 -Enable -RegistrationMode Manual
+```
+
+### Example 5: Enable OpenSSH Agent Service & Run Cryptographic Sandbox Test
+```powershell
+.\Enable-GitCommitSigning.ps1 -Enable -ConfigureAgent -TestCommit
+```
+
+### Example 6: Ship Signed Changes to Remote with Real-Time Progress Bar
+```powershell
+.\Enable-GitCommitSigning.ps1 -Push -RepoPath "C:\Dane\rpindela\GitHub\Dev" -CommitMessage "feat: implement cryptographic commit signing"
 ```
 
 ---
 
-## 5. Parameter Reference
+## Parameter Reference
 
 | Parameter | Aliases | Type | Default Value | Description |
 | :--- | :--- | :--- | :--- | :--- |
@@ -126,47 +98,25 @@ C:\Dane\rpindela\GitHub\Dev\
 
 ---
 
-## 6. Usage Examples
+## Directory Structure
 
-### Example 1: Display Help & Usage Manual (Empty-Run)
-```powershell
-.\Enable-GitCommitSigning.ps1
-# Or explicitly:
-.\Enable-GitCommitSigning.ps1 -Help
-```
-
-### Example 2: Complete Automatic Setup (Recommended)
-Generates a dedicated `id_ed25519_signing` key, configures global Git variables, creates `allowed_signers`, registers the key via GitHub CLI (`gh`), and tests the signature:
-```powershell
-.\Enable-GitCommitSigning.ps1 -Enable
-```
-
-### Example 3: Use Existing SSH Key (~/.ssh/id_ed25519)
-If you already have a personal SSH key and want to use it for commit signing:
-```powershell
-.\Enable-GitCommitSigning.ps1 -Enable -UseExistingKey
-```
-
-### Example 4: Semi-Automated Web Portal Registration
-Copies the public key to the clipboard and automatically opens `https://github.com/settings/keys` in your browser:
-```powershell
-.\Enable-GitCommitSigning.ps1 -Enable -RegistrationMode Manual
-```
-
-### Example 5: Enable OpenSSH Agent Service & Run Cryptographic Sandbox Test
-```powershell
-.\Enable-GitCommitSigning.ps1 -Enable -ConfigureAgent -TestCommit
-```
-
-### Example 6: Ship Signed Changes to Remote with Real-Time Progress Bar
-Stages all modified files, creates a cryptographically signed commit (`git commit -S`), and pushes to GitHub with real-time progress indicators:
-```powershell
-.\Enable-GitCommitSigning.ps1 -Push -RepoPath "C:\Dane\rpindela\GitHub\Dev" -CommitMessage "feat: implement cryptographic commit signing"
+```text
+C:\Dane\rpindela\GitHub\Dev\
+│
+├── Enable-GitCommitSigning\
+│   ├── assets/
+│   │   ├── Standard_run.jpg                           # Empty-run help guide view
+│   │   ├── Adding_new_ssh_key_to_github_account.jpg   # GitHub SSH signing key registration dialog
+│   │   ├── Adding_new_ssh_key_to_github_account2.jpg  # GitHub SSH keys overview dashboard
+│   │   └── Success.jpg                                # Full execution and signature verification view
+│   ├── Enable-GitCommitSigning.ps1                    # Main production automation script
+│   └── README.md                                      # Documentation (this file)
+└── README.md                                          # Dev repository index
 ```
 
 ---
 
-## 7. GitHub Key Registration Modes
+## GitHub Key Registration Modes
 
 ### Automated Registration (GitHub CLI)
 When `-RegistrationMode Auto` is selected (default), the script inspects your active GitHub CLI session:
@@ -182,132 +132,77 @@ When `-RegistrationMode Auto` is selected (default), the script inspects your ac
 If GitHub CLI is not installed, lacks the signing scope, or `-RegistrationMode Manual` is chosen:
 1. The public key is copied to the Windows Clipboard (`Set-Clipboard` / `clip.exe`).
 2. Your default web browser opens directly to `https://github.com/settings/keys`.
-3. The script displays color-coded step-by-step instructions:
-   - Click the green button **New SSH key**.
-   - Enter a title (e.g., `RPINDELA-PC - Git Commit Signing`).
-   - Change **Key type** from *Authentication Key* to **Signing Key**.
-   - Paste the public key from your clipboard (Ctrl + V).
-   - Click **Add SSH key**.
+3. Follow the displayed instructions to add the key as a **Signing Key** (not *Authentication Key*).
 
 ![Adding New SSH Key to GitHub](assets/Adding_new_ssh_key_to_github_account.jpg)
 
 ---
 
-## 8. Local Signature Verification (allowed_signers)
+## Local Signature Verification (`allowed_signers`)
 
-GitHub automatically validates SSH signatures on its web platform. However, to verify signatures locally in your terminal with `git log --show-signature`, Git requires a local `allowed_signers` database.
+GitHub validates SSH signatures on its web platform, while local verification (`git log --show-signature`) requires a local `allowed_signers` file at `C:\Users\<Username>\.ssh\allowed_signers` mapped via:
 
-The script creates and updates:
-```text
-C:\Users\<Username>\.ssh\allowed_signers
-```
-Containing your committer email and public key:
-```text
-roman.pindela@gmail.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA...
-```
-
-And maps it globally in Git:
 ```powershell
 git config --global gpg.ssh.allowedSignersFile "C:/Users/<Username>/.ssh/allowed_signers"
 ```
 
-When you inspect signed commits locally, Git outputs:
-```text
-commit fda7c94ec8b79f1501ad41d45253a93d2241e219
-Good "git" signature for roman.pindela@gmail.com with ED25519 key SHA256:trVS...
-Author: Roman Pindela <roman.pindela@gmail.com>
-Date:   Thu Oct 22 13:04:16 2026 +0200
-```
+---
+
+## File Shipping Pipeline with Progress Bar (`-Push`)
+
+- **Phase 1 (20%):** Scans for modified and untracked files (`git status --porcelain`).
+- **Phase 2 (40%):** Stages changes (`git add -A`).
+- **Phase 3 (60%):** Creates a cryptographically signed commit (`git commit -S -m ...`).
+- **Phase 4 (80%):** Pushes to remote (`git push origin <branch> --progress`).
+- **Phase 5 (100%):** Verifies the latest commit signature (`git log --show-signature -1`).
 
 ---
 
-## 9. File Shipping Pipeline with Progress Bar (-Push)
+## Event Logging
 
-When shipping code to GitHub, `Enable-GitCommitSigning.ps1` provides an automated shipping workflow:
-- **Phase 1 (20%):** Scans for dirty worktree and untracked files, reporting file names and modification status.
-- **Phase 2 (40%):** Stages changes into the Git tracking index (`git add -A`).
-- **Phase 3 (60%):** Cryptographically signs the commit with your private SSH key (`git commit -S -m ...`).
-- **Phase 4 (80%):** Performs remote handshake and transfers objects to upstream branch (`git push origin <branch> --progress`).
-- **Phase 5 (100%):** Validates the latest pushed commit hash and verifies that the signature was cryptographically sealed.
+- **Default Log Location:** `$HOME\.git-commit-signing\logs\commit-signing-YYYYMMDD-HHmmss.log`
+- **Custom Log Path:** Pass `-LogPath "C:\MyLogs\signing.log"` to direct logs to a specific file, or `-NoLog` to disable file logging.
 
 ---
 
-## 10. Event Logging
+## Troubleshooting & FAQ
 
-Logging is enabled by default to provide an audit trail of configuration changes and repository operations.
-
-- **Default Log Location:**
-  ```text
-  $HOME\.git-commit-signing\logs\commit-signing-YYYYMMDD-HHmmss.log
-  ```
-- **Custom Log Path:** Pass `-LogPath "C:\MyLogs\signing.log"` to direct logs to a specific file.
-- **Log Format:**
-  ```text
-  [2026-10-22 13:07:20] [INFO] Inspecting SSH Keypair Material...
-  [2026-10-22 13:07:21] [SUCCESS] Generated new ed25519 keypair at: C:\Users\rpindela\.ssh\id_ed25519_signing
-  [2026-10-22 13:07:21] [STEP] Injecting Global Git SSH Signing Configuration...
-  [2026-10-22 13:07:22] [SUCCESS] Cryptographic signature generated and verified successfully!
-  ```
+- **GitHub shows "Unverified":** Ensure the key is added as a **Signing Key** at `https://github.com/settings/keys` and `git config user.email` matches a verified email on your GitHub account.
+- **`ssh-agent` fails to start:** Run PowerShell as Administrator once and run `Set-Service -Name ssh-agent -StartupType Automatic; Start-Service -Name ssh-agent` (Git SSH signing still works directly via the key file even if `ssh-agent` is stopped).
+- **Verify active config:** Run `git config --list --show-origin` and confirm `gpg.format=ssh`, `user.signingkey`, `commit.gpgsign=true`, `tag.gpgsign=true`, and `gpg.ssh.allowedsignersfile`.
 
 ---
 
-## 11. Troubleshooting & FAQ
-
-### Q1: Why does GitHub show "Unverified" on my commit?
-**Answer:** The commit was signed with an SSH key that has not yet been registered on GitHub as a **Signing Key**.
-- Go to `https://github.com/settings/keys`.
-- Verify that your public key is listed under **SSH Keys** with the badge **Signing Key** (NOT only *Authentication Key*).
-- Ensure the committer email in your Git configuration (`git config user.email`) is verified on your GitHub account.
-
-### Q2: Why does `ssh-agent` service fail to start?
-**Answer:** The Windows `OpenSSH Authentication Agent` service is set to `Disabled` by default on fresh Windows installations. Configuring service startup types requires Administrator privileges. Run PowerShell as Administrator once:
-```powershell
-Set-Service -Name ssh-agent -StartupType Automatic
-Start-Service -Name ssh-agent
-```
-*Note: Git SSH commit signing works directly via the key file even if `ssh-agent` is stopped.*
-
-### Q3: How do I verify that signing is active?
-**Answer:** Run `git config --list --show-origin` and look for:
-```text
-gpg.format=ssh
-user.signingkey=C:/Users/.../.ssh/id_ed25519_signing.pub
-commit.gpgsign=true
-tag.gpgsign=true
-gpg.ssh.allowedsignersfile=C:/Users/.../.ssh/allowed_signers
-```
-
----
-
-## 12. Security & Script Unblocking
-
-When PowerShell scripts are downloaded from GitHub or external sources, Windows marks them with the `Zone.Identifier` NTFS alternate data stream. Before executing the script, unblock it:
+## Security & Script Unblocking
 
 ```powershell
 Unblock-File -Path .\Enable-GitCommitSigning.ps1
 ```
 
-Or for all scripts in the repository:
-```powershell
-Get-ChildItem -Path "C:\Dane\rpindela\GitHub\Dev" -Recurse -Filter "*.ps1" | Unblock-File
-```
-
 ---
 
-## 13. Screenshots & Visual Walkthrough
+## Screenshots & Visual Walkthrough
 
 ### 1. Interactive Help Menu & Metadata (Empty-Run Safeguard)
-Executed by running `.\Enable-GitCommitSigning.ps1` without any parameters:
 ![Standard Run](assets/Standard_run.jpg)
 
 ### 2. GitHub Web Portal - Registering Signing Key
-Selecting **Signing Key** (instead of *Authentication Key*) in GitHub account settings:
 ![Adding New SSH Key to GitHub](assets/Adding_new_ssh_key_to_github_account.jpg)
 
 ### 3. GitHub SSH Keys Dashboard Overview
-Viewing verified registered signing keys in your GitHub account dashboard:
 ![GitHub SSH Keys Dashboard](assets/Adding_new_ssh_key_to_github_account2.jpg)
 
 ### 4. Successful End-to-End Execution & Signature Verification
-Complete onboarding execution demonstrating all 7 automated stages, sandbox cryptographic verification, and active signing summary:
 ![Execution Success](assets/Success.jpg)
+
+---
+
+## Author
+
+- **Roman Pindela**
+- **Email:** [roman.pindela@gmail.com](mailto:roman.pindela@gmail.com)
+- **GitHub:** [https://github.com/romanpindela](https://github.com/romanpindela)
+- **Repository:** [https://github.com/romanpindela/Dev](https://github.com/romanpindela/Dev)
+- **Version:** `1.0.0`
+- **Release Date:** October 2026
+- **License:** MIT
