@@ -33,9 +33,10 @@
     Displays this help menu.
 .NOTES
     Author: Roman Pindela
-    Contact: roman.pindela@gmail.com[cite: 1]
-    GitHub: https://github.com/romanpindela[cite: 1]
+    Contact: roman.pindela@gmail.com
+    GitHub: https://github.com/romanpindela
     Version: 1.7.0
+    License: MIT
 #>
 
 [CmdletBinding(SupportsShouldProcess=$true)]
@@ -57,7 +58,7 @@ param (
 function Show-ScriptHelp {
     Clear-Host
     Write-Host "=====================================================================" -ForegroundColor Cyan
-    Write-Host "          INITIALIZE-GITIGNORE - WORKSPACE CONFIGURATION ENGINE" -ForegroundColor Cyan
+    Write-Host "          Initialize-GitIgnore - WORKSPACE CONFIGURATION ENGINE" -ForegroundColor Cyan
     Write-Host "=====================================================================" -ForegroundColor Cyan
     Write-Host "Version : 1.7.0" -ForegroundColor Yellow
     Write-Host "Author  : Roman Pindela (roman.pindela@gmail.com)" -ForegroundColor Yellow
